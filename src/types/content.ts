@@ -120,6 +120,22 @@ export interface AtelierStep {
   media: Media
 }
 
+/** Opção de um campo do ateliê digital: rótulo para a tela e trecho do prompt (em inglês) para a IA. */
+export interface AtelierOption {
+  id: string
+  label: string
+  prompt: string
+}
+
+export interface AtelierOptions {
+  peca: AtelierOption[]
+  tecido: AtelierOption[]
+  cor: AtelierOption[]
+  silhueta: AtelierOption[]
+  detalhes: AtelierOption[]
+  colecao: AtelierOption[]
+}
+
 /** Item do rodapé: vira link quando tiver `href`; sem ele, é texto. */
 export interface FooterItem {
   label: string

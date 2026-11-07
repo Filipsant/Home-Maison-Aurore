@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024" role="img" aria-label="Imagem de exemplo: desenho de um vestido em musselina">
+  <!-- Exemplo mostrado quando a geração de imagem não responde. Desenho da toile do Figma da Maison Aurore. -->
+  <rect width="768" height="1024" fill="#CFC9BF"/>
+  <g transform="translate(99 148) scale(1)" fill="none" stroke-width="1.4">
+    <path d="M256.5 85.5C275.5 98.8 294.5 98.8 313.5 85.5L324.9 131.1C315.4 169.1 309.7 207.1 307.8 245.1L387.6 558.6H182.4L262.2 245.1C260.3 207.1 254.6 169.1 245.1 131.1L256.5 85.5Z" stroke="#1C1B20"/>
+    <path d="M262.2 245.1C277.4 252.7 292.6 252.7 307.8 245.1" stroke="#1C1B20"/>
+    <path d="M256.5 85.5L265.05 51.3M313.5 85.5L304.95 51.3" stroke="#1C1B20"/>
+    <path d="M285 105V558.6" stroke="#3E5BA9" stroke-dasharray="4 5"/>
+    <path d="M213.75 427.5H356.25M199.5 484.5H370.5" stroke="#1C1B20" stroke-dasharray="2 6"/>
+  </g>
+</svg>
