@@ -12,11 +12,11 @@ React 18, TypeScript (strict), Vite, Tailwind CSS 4, shadcn/ui (Radix), GSAP 3 (
 
 ```bash
 npm install
-npm run dev          # site + API em http://localhost:5173 (sem login; a geração de imagem cai no exemplo)
-npm run dev:ia       # igual, mas com o Workers AI de verdade (precisa de login no Cloudflare)
+npm run dev          # site + API em http://localhost:5173 (gera imagens se o .env tiver conta e token do Cloudflare)
+npm run dev:ia       # igual, mas pelo vínculo AI remoto (precisa de `wrangler login`)
 npm run build        # checa os tipos e gera o site e o Worker em dist/
 npm run lint
-npm test             # 74 testes: site (jsdom) e Worker (Node), sem gastar cota
+npm test             # 80 testes: site (jsdom) e Worker (Node), sem gastar cota
 npm run deploy       # publica no Cloudflare
 ```
 
@@ -108,18 +108,18 @@ Cloudflare Worker (worker/) ── mesmo endereço do site, rotas /api/*
     └─ GET /api/imagens/:hash ─→ serve o resultado guardado (cache longo no navegador)
 ```
 
-| Arquivo                      | Papel                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------ |
-| `worker/index.ts`            | Rotas, checagem de origem e CORS                                         |
-| `worker/ai/prompt.ts`        | Valida os campos (só ids do catálogo) e monta o prompt de moda em inglês |
-| `worker/ai/imageGen.ts`      | Chamada ao flux-1-schnell (4 passos)                                     |
-| `worker/ai/tryOn.ts`         | Chamada ao Space do provador, com reserva e prazo total                  |
-| `worker/lib/`                | Cache no KV, hash, rate limit, tempo máximo e respostas de exemplo       |
-| `src/data/atelierOptions.ts` | Campos do formulário: rótulo para a tela e trecho do prompt para a IA    |
-| `src/lib/ai/client.ts`       | Cliente usado pelas telas; nunca lança erro: falha vira exemplo          |
-| `src/hooks/useAiRequest.ts`  | Estados das telas: ocioso, carregando (com segundos), pronto             |
+| Arquivo                      | Papel                                                                        |
+| ---------------------------- | ---------------------------------------------------------------------------- |
+| `worker/index.ts`            | Rotas, checagem de origem e CORS                                             |
+| `worker/ai/prompt.ts`        | Valida os campos (só ids do catálogo) e monta o prompt de moda em inglês     |
+| `worker/ai/imageGen.ts`      | Chamada ao flux-1-schnell (4 passos): vínculo AI ou, no computador, API REST |
+| `worker/ai/tryOn.ts`         | Chamada ao Space do provador, com reserva e prazo total                      |
+| `worker/lib/`                | Cache no KV, hash, rate limit, tempo máximo e respostas de exemplo           |
+| `src/data/atelierOptions.ts` | Campos do formulário: rótulo para a tela e trecho do prompt para a IA        |
+| `src/lib/ai/client.ts`       | Cliente usado pelas telas; nunca lança erro: falha vira exemplo              |
+| `src/hooks/useAiRequest.ts`  | Estados das telas: ocioso, carregando (com segundos), pronto                 |
 
-**Resiliência**: quando a IA não responde (tempo esgotado, cota do dia, Space fora do ar, limite por IP), a tela mostra a imagem de exemplo de `public/exemplos/` e uma mensagem amigável (`src/data/aiMessages.ts`). Para trocar o exemplo da peça por uma foto gerada pela IA, rode `npm run dev:ia` e, em outro terminal, `npm run exemplos:gerar`.
+**Resiliência**: quando a IA não responde (tempo esgotado, cota do dia, Space fora do ar, limite por IP), a tela mostra a imagem de exemplo de `public/exemplos/` e uma mensagem amigável (`src/data/aiMessages.ts`). Para trocar o exemplo da peça por uma foto gerada pela IA, rode `npm run dev` (com o token no `.env`) e, em outro terminal, `npm run exemplos:gerar`.
 
 **Custos**: zero. O Workers AI tem 10.000 "neurons" grátis por dia (cerca de 170 imagens com 4 passos); o Space do Hugging Face é público. O rate limit (5 imagens e 2 provas por minuto por IP, em `wrangler.jsonc`) e o cache protegem essa cota.
 
@@ -127,14 +127,14 @@ Cloudflare Worker (worker/) ── mesmo endereço do site, rotas /api/*
 
 Copie [`.env.example`](.env.example) para `.env` (que não vai para o Git). O Worker lê o `.env` em desenvolvimento; em produção, os segredos são cadastrados com `npx wrangler secret put`.
 
-| Variável                                        | Onde                | Para quê                                                                                                                                        |
-| ----------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `HF_TOKEN`                                      | Worker (secreta)    | Token "Read" do Hugging Face. Opcional; aumenta a cota de GPU do provador.                                                                      |
-| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | só o wrangler (CLI) | Login para `dev:ia` e `deploy`. Alternativa: `npx wrangler login`. O token precisa do modelo "Edit Cloudflare Workers" mais "Workers AI: Edit". |
-| `TRYON_SPACE`, `TRYON_SPACE_RESERVA`            | Worker              | Spaces do provador (principal e reserva).                                                                                                       |
-| `ALLOWED_ORIGINS`                               | Worker              | Outros domínios que podem chamar a API (o próprio site é sempre aceito).                                                                        |
-| `IMAGE_TIMEOUT_MS`, `TRYON_TIMEOUT_MS`          | Worker              | Tempo máximo antes do exemplo.                                                                                                                  |
-| `VITE_AI_API_URL`                               | navegador (público) | Endereço da API, se ficar em outro domínio. Vazio = mesmo endereço.                                                                             |
+| Variável                                        | Onde                | Para quê                                                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `HF_TOKEN`                                      | Worker (secreta)    | Token "Read" do Hugging Face. Opcional; aumenta a cota de GPU do provador.                                                                                                                                                                                                                                         |
+| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | só no computador    | Com as duas, o Worker local chama o Workers AI pela API REST e `npm run dev` gera imagens (basta a permissão "Workers AI"). O wrangler também as usa em `dev:ia` e `deploy` (aí o token precisa de "Edit Cloudflare Workers" mais "Workers AI: Edit"; alternativa: `npx wrangler login`). Nunca vão para produção. |
+| `TRYON_SPACE`, `TRYON_SPACE_RESERVA`            | Worker              | Spaces do provador (principal e reserva).                                                                                                                                                                                                                                                                          |
+| `ALLOWED_ORIGINS`                               | Worker              | Outros domínios que podem chamar a API (o próprio site é sempre aceito).                                                                                                                                                                                                                                           |
+| `IMAGE_TIMEOUT_MS`, `TRYON_TIMEOUT_MS`          | Worker              | Tempo máximo antes do exemplo.                                                                                                                                                                                                                                                                                     |
+| `VITE_AI_API_URL`                               | navegador (público) | Endereço da API, se ficar em outro domínio. Vazio = mesmo endereço.                                                                                                                                                                                                                                                |
 
 Nunca use o prefixo `VITE_` em chaves: o Vite embute essas variáveis no site e qualquer pessoa consegue lê-las.
 
@@ -155,10 +155,10 @@ Depois do deploy, acrescente o endereço publicado (por exemplo `https://maison-
 
 **Geração de imagem (Workers AI)**
 
-1. `npm run dev:ia` e abra `http://localhost:5173/atelie-digital`.
+1. Preencha `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN` no `.env`, rode `npm run dev` e abra `http://localhost:5173/atelie-digital`.
 2. Escolha as opções e clique em "Criar peça": a foto aparece em poucos segundos.
 3. Clique de novo sem mudar nada: aparece "Esta peça já tinha sido criada", vinda do cache.
-4. Sem `dev:ia` (só `npm run dev`), a tela mostra o exemplo e a mensagem de indisponível: é o fallback funcionando.
+4. Com as duas variáveis vazias (e sem `dev:ia`), a tela mostra o exemplo e a mensagem de indisponível: é o fallback funcionando.
 
 Pelo terminal:
 

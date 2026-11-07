@@ -3,7 +3,7 @@
  * public/exemplos/peca.jpg (a imagem mostrada quando a geração falha).
  *
  * Usa o próprio Worker local, com a mesma validação e o mesmo prompt do site:
- *   1. em um terminal:  npm run dev:ia      (precisa de login no Cloudflare)
+ *   1. em um terminal:  npm run dev   (com CLOUDFLARE_ACCOUNT_ID e CLOUDFLARE_API_TOKEN no .env)
  *   2. em outro:        npm run exemplos:gerar
  *
  * Gasta ~60 dos 10.000 "neurons" gratuitos do dia (uma imagem).
@@ -33,14 +33,14 @@ async function main() {
       body: JSON.stringify(pecaDeExemplo),
     })
   } catch {
-    throw new Error(`Não encontrei o Worker em ${base}. Rode "npm run dev:ia" em outro terminal.`)
+    throw new Error(`Não encontrei o Worker em ${base}. Rode "npm run dev" em outro terminal.`)
   }
 
   const resultado = await resposta.json()
   if (resultado.status !== 'ok') {
     throw new Error(
       `A IA não gerou a imagem (motivo: ${resultado.reason}). ` +
-        'Confira se o servidor está em "npm run dev:ia" e se o login no Cloudflare funciona.',
+        'Confira se CLOUDFLARE_ACCOUNT_ID e CLOUDFLARE_API_TOKEN estão no .env e reinicie o "npm run dev".',
     )
   }
 

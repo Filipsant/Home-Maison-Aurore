@@ -13,8 +13,9 @@ export async function withTimeout<T>(promise: Promise<T>, ms: number, onTimeout?
   let timer: ReturnType<typeof setTimeout> | undefined
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
-      onTimeout?.()
+      // Rejeita antes de cancelar: assim o motivo é sempre "tempo", nunca o erro do cancelamento.
       reject(new TimeoutError(ms))
+      onTimeout?.()
     }, ms)
   })
   try {

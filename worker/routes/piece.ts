@@ -30,7 +30,7 @@ export async function handlePieceImage(request: Request, env: Env): Promise<Resp
   // 3. Geração com tempo máximo; qualquer falha vira a imagem de exemplo.
   try {
     const prompt = buildPiecePrompt(piece)
-    const bytes = await generatePieceImage(env.AI, prompt, msFromEnv(env.IMAGE_TIMEOUT_MS, 20_000))
+    const bytes = await generatePieceImage(env, prompt, msFromEnv(env.IMAGE_TIMEOUT_MS, 20_000))
     await putCachedImage(env.CACHE, hash, { bytes, contentType: 'image/jpeg' })
     return ok(false)
   } catch (error) {
