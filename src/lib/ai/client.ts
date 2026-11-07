@@ -26,10 +26,10 @@ export async function generatePiece(request: PieceRequest, signal?: AbortSignal)
       body: JSON.stringify(request),
       signal,
     })
-    return await readResult(response, '/exemplos/peca.svg')
+    return await readResult(response, '/exemplos/peca.jpg')
   } catch (error) {
     if (signal?.aborted) throw error
-    return { status: 'fallback', imageUrl: '/exemplos/peca.svg', reason: 'indisponivel' }
+    return { status: 'fallback', imageUrl: '/exemplos/peca.jpg', reason: 'indisponivel' }
   }
 }
 
@@ -52,9 +52,9 @@ export async function tryOn(request: TryOnRequest, signal?: AbortSignal): Promis
 
   try {
     const response = await fetch(`${API_URL}/api/provador`, { method: 'POST', body: form, signal })
-    return await readResult(response, '/exemplos/provador.svg')
+    return await readResult(response, '/exemplos/provador.jpg')
   } catch (error) {
     if (signal?.aborted) throw error
-    return { status: 'fallback', imageUrl: '/exemplos/provador.svg', reason: 'indisponivel' }
+    return { status: 'fallback', imageUrl: '/exemplos/provador.jpg', reason: 'indisponivel' }
   }
 }

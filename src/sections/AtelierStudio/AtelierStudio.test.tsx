@@ -64,7 +64,7 @@ describe('Criar peça (ateliê digital)', () => {
       'fetch',
       vi.fn(() =>
         Promise.resolve(
-          Response.json({ status: 'fallback', imageUrl: '/exemplos/peca.svg', reason: 'cota' }),
+          Response.json({ status: 'fallback', imageUrl: '/exemplos/peca.jpg', reason: 'cota' }),
         ),
       ),
     )

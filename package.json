@@ -11,6 +11,7 @@
     "deploy": "npm run build && wrangler deploy",
     "typecheck": "tsc -b",
     "types:worker": "wrangler types worker/worker-configuration.d.ts --env-file .env.example",
+    "exemplos:gerar": "node scripts/gerar-exemplos.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

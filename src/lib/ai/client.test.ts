@@ -37,7 +37,7 @@ describe('cliente da API de IA', () => {
     )
     expect(await generatePiece(piece)).toEqual({
       status: 'fallback',
-      imageUrl: '/exemplos/peca.svg',
+      imageUrl: '/exemplos/peca.jpg',
       reason: 'indisponivel',
     })
   })
@@ -48,7 +48,7 @@ describe('cliente da API de IA', () => {
       vi.fn(() => Promise.resolve(new Response('<html>', { status: 502 }))),
     )
     const result = await tryOn({ person: new Blob(['x']), garment: new Blob(['y']) })
-    expect(result).toMatchObject({ status: 'fallback', imageUrl: '/exemplos/provador.svg' })
+    expect(result).toMatchObject({ status: 'fallback', imageUrl: '/exemplos/provador.jpg' })
   })
 
   it('cancelamento continua sendo cancelamento (não vira exemplo)', async () => {
@@ -79,7 +79,7 @@ describe('cliente da API de IA', () => {
 
   it('apiUrl só prefixa os caminhos da API', () => {
     expect(apiUrl('/api/imagens/abc')).toBe('/api/imagens/abc')
-    expect(apiUrl('/exemplos/peca.svg')).toBe('/exemplos/peca.svg')
+    expect(apiUrl('/exemplos/peca.jpg')).toBe('/exemplos/peca.jpg')
   })
 })
 

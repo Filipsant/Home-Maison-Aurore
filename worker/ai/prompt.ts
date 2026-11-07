@@ -3,7 +3,7 @@ import type { PieceRequest } from '../../src/types/ai'
 import type { AtelierOption } from '../../src/types/content'
 
 /** Versão do modelo de prompt: mudar o texto abaixo exige subir este número (invalida o cache). */
-export const PROMPT_VERSION = 'peca-v1'
+export const PROMPT_VERSION = 'peca-v2'
 
 /** Máximo de versões diferentes para os mesmos campos ("gerar outra versão"). */
 export const MAX_VARIANTE = 9
@@ -54,19 +54,25 @@ const joinList = (items: string[]) =>
  */
 export function buildPiecePrompt(req: PieceRequest): string {
   const label = (list: AtelierOption[], id: string) => find(list, id)?.prompt ?? ''
+  const color = label(atelierOptions.cor, req.cor)
   const detalhes = req.detalhes.map((id) => label(atelierOptions.detalhes, id))
+  const garment =
+    `A model wearing ${article(color)} ${color} ${label(atelierOptions.peca, req.peca)}` +
+    ` with a ${label(atelierOptions.silhueta, req.silhueta)}, made of ${label(atelierOptions.tecido, req.tecido)}` +
+    (detalhes.length ? `, featuring ${joinList(detalhes)}.` : '.')
 
   return [
     'Haute couture fashion editorial photograph.',
-    `A model wearing a ${label(atelierOptions.cor, req.cor)} ${label(atelierOptions.peca, req.peca)}`,
-    `with a ${label(atelierOptions.silhueta, req.silhueta)}, made of ${label(atelierOptions.tecido, req.tecido)}`,
-    detalhes.length ? `featuring ${joinList(detalhes)}.` : '.',
+    garment,
     `Mood: ${label(atelierOptions.colecao, req.colecao)}.`,
     'Full-length view, elegant natural pose, minimalist Parisian atelier backdrop in warm grey,',
     'soft directional window light, medium format photography, 85mm lens, shallow depth of field,',
     'crisp fabric texture and visible couture craftsmanship, refined luxury fashion magazine aesthetic, photorealistic.',
     'No text, no logos, no watermark.',
-  ]
-    .join(' ')
-    .replace(/\s+\./g, '.')
+  ].join(' ')
+}
+
+/** Artigo em inglês conforme a primeira letra ("an ivory", "a black"). */
+function article(word: string): 'a' | 'an' {
+  return /^[aeiou]/i.test(word) ? 'an' : 'a'
 }

@@ -37,12 +37,19 @@ describe('buildPiecePrompt (prompt de moda)', () => {
   it('monta o prompt em inglês com os trechos de cada campo', () => {
     const prompt = buildPiecePrompt(parsePieceRequest(validPiece)!)
     expect(prompt).toContain('Haute couture fashion editorial photograph')
-    expect(prompt).toContain('ivory haute couture evening gown')
+    expect(prompt).toContain('A model wearing an ivory haute couture evening gown')
+    expect(prompt).toContain('layered silk organza, featuring')
     expect(prompt).toContain('mermaid silhouette')
     expect(prompt).toContain('layered silk organza')
     expect(prompt).toContain('featuring intricate hand embroidery and scattered seed pearls')
     expect(prompt).toContain('No text, no logos, no watermark')
     expect(prompt).not.toMatch(/\s\./)
+  })
+
+  it('usa "a" antes de consoante ("a deep black")', () => {
+    expect(buildPiecePrompt(parsePieceRequest({ ...validPiece, cor: 'preto' })!)).toContain(
+      'A model wearing a deep black',
+    )
   })
 
   it('funciona sem detalhes', () => {

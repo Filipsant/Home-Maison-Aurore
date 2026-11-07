@@ -49,7 +49,7 @@ describe('POST /api/pecas/imagem', () => {
     expect(await json(response)).toMatchObject({
       status: 'fallback',
       reason: 'invalido',
-      imageUrl: '/exemplos/peca.svg',
+      imageUrl: '/exemplos/peca.jpg',
     })
     expect(ai.run).not.toHaveBeenCalled()
   })
@@ -154,7 +154,7 @@ describe('POST /api/provador', () => {
     const notImage = new File(['texto'], 'nota.txt', { type: 'text/plain' })
     const response = await call(form({ pessoa: notImage, peca: image('v.jpg') }), env)
     expect(response.status).toBe(400)
-    expect(await json(response)).toMatchObject({ reason: 'invalido', imageUrl: '/exemplos/provador.svg' })
+    expect(await json(response)).toMatchObject({ reason: 'invalido', imageUrl: '/exemplos/provador.jpg' })
   })
 
   it('Space fora do ar: imagem de exemplo com motivo "indisponivel"', async () => {

@@ -2,8 +2,8 @@ import type { AiResult, FallbackReason } from '../../src/types/ai'
 
 /** Imagens de exemplo pré-geradas (em public/exemplos), mostradas quando a IA falha. */
 export const FALLBACK_IMAGES = {
-  peca: '/exemplos/peca.svg',
-  provador: '/exemplos/provador.svg',
+  peca: '/exemplos/peca.jpg',
+  provador: '/exemplos/provador.jpg',
 } as const
 
 /** Resposta de fallback: status 200 para a tela tratar como resultado, com o motivo. */
