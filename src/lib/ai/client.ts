@@ -17,8 +17,9 @@ async function readResult(response: Response, fallbackImage: string): Promise<Ai
   }
 }
 
-/** Gera a foto de uma peça. Nunca lança: falhas viram resultado de exemplo. */
+/** Gera a foto de uma peça. Nunca lança: falhas viram resultado de exemplo (da mesma linha). */
 export async function generatePiece(request: PieceRequest, signal?: AbortSignal): Promise<AiResult> {
+  const example = request.linha === 'masculina' ? '/exemplos/peca-masculina.jpg' : '/exemplos/peca.jpg'
   try {
     const response = await fetch(`${API_URL}/api/pecas/imagem`, {
       method: 'POST',
@@ -26,10 +27,10 @@ export async function generatePiece(request: PieceRequest, signal?: AbortSignal)
       body: JSON.stringify(request),
       signal,
     })
-    return await readResult(response, '/exemplos/peca.jpg')
+    return await readResult(response, example)
   } catch (error) {
     if (signal?.aborted) throw error
-    return { status: 'fallback', imageUrl: '/exemplos/peca.jpg', reason: 'indisponivel' }
+    return { status: 'fallback', imageUrl: example, reason: 'indisponivel' }
   }
 }
 

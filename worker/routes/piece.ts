@@ -19,13 +19,15 @@ export async function handlePieceImage(request: Request, env: Env): Promise<Resp
   const hash = await sha256(PROMPT_VERSION, JSON.stringify(piece))
   const ok = (cached: boolean): Response =>
     Response.json({ status: 'ok', id: hash, imageUrl: `/api/imagens/${hash}`, cached } satisfies AiResult)
+  // Exemplo da mesma linha que a pessoa escolheu.
+  const example = piece.linha === 'masculina' ? 'pecaMasculina' : 'peca'
 
   // 1. Cache: pedido repetido não gasta cota nem conta no limite.
   if (await getCachedImage(env.CACHE, hash)) return ok(true)
 
   // 2. Limite por IP.
   const limit = await limitByIp(env.LIMITE_IMAGEM, 'imagem', clientIp(request), RULE)
-  if (!limit.ok) return fallback('peca', 'limite', { retryAfter: limit.retryAfter })
+  if (!limit.ok) return fallback(example, 'limite', { retryAfter: limit.retryAfter })
 
   // 3. Geração com tempo máximo; qualquer falha vira a imagem de exemplo.
   try {
@@ -36,6 +38,6 @@ export async function handlePieceImage(request: Request, env: Env): Promise<Resp
   } catch (error) {
     console.error('[imagem] falhou:', String(error))
     const reason = error instanceof TimeoutError ? 'tempo' : isQuotaError(error) ? 'cota' : 'indisponivel'
-    return fallback('peca', reason)
+    return fallback(example, reason)
   }
 }

@@ -1,9 +1,10 @@
 /** Textos da página "Criar peça" (ateliê digital). */
 export const atelierPage = {
   title: 'Ateliê digital',
-  lead: 'Escolha a peça, o tecido e os detalhes. A inteligência artificial desenha uma fotografia de moda a partir das suas escolhas.',
+  lead: 'Escolha a linha, a peça, o tecido e os detalhes. A inteligência artificial desenha uma fotografia de moda a partir das suas escolhas.',
   note: 'Imagens geradas por IA (Cloudflare Workers AI) para inspiração: não representam peças reais da maison.',
   fields: {
+    linha: 'Linha',
     peca: 'Peça',
     tecido: 'Tecido',
     cor: 'Cor',

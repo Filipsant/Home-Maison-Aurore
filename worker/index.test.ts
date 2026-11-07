@@ -63,6 +63,26 @@ describe('POST /api/pecas/imagem', () => {
     })
   })
 
+  it('linha masculina: quando a IA falha, o exemplo também é masculino', async () => {
+    const { env, ai } = fakeEnv()
+    ai.run.mockRejectedValueOnce(new Error('fora do ar'))
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const male = {
+      linha: 'masculina',
+      peca: 'terno',
+      tecido: 'la-fria',
+      cor: 'azul-noite',
+      silhueta: 'reta',
+      detalhes: [],
+      colecao: 'lumiere',
+    }
+    expect(await json(await call(postJson('/api/pecas/imagem', male), env))).toMatchObject({
+      status: 'fallback',
+      imageUrl: '/exemplos/peca-masculina.jpg',
+      reason: 'indisponivel',
+    })
+  })
+
   it('cota diária esgotada: motivo "cota"', async () => {
     const { env, ai } = fakeEnv()
     ai.run.mockRejectedValueOnce(

@@ -10,13 +10,16 @@ import { aiMessages } from '@/data/aiMessages'
 import { atelierOptions, MAX_DETALHES } from '@/data/atelierOptions'
 import { atelierPage } from '@/data/atelierPage'
 import { useAiRequest } from '@/hooks/useAiRequest'
+import { fitsLinha, optionsForLinha } from '@/lib/ai/atelier'
 import { generatePiece } from '@/lib/ai/client'
 import { altForPiece, describePiece } from '@/lib/ai/describe'
 import type { PieceRequest } from '@/types/ai'
 
 type SingleField = 'peca' | 'tecido' | 'cor' | 'silhueta' | 'colecao'
+const SINGLE_FIELDS: SingleField[] = ['peca', 'tecido', 'cor', 'silhueta', 'colecao']
 
 const INITIAL: PieceRequest = {
+  linha: 'feminina',
   peca: 'vestido',
   tecido: 'organza',
   cor: 'marfim',
@@ -27,6 +30,23 @@ const INITIAL: PieceRequest = {
 
 /** Máximo de versões para os mesmos campos (igual ao Worker). */
 const MAX_VARIANTE = 9
+
+/**
+ * Troca a linha mantendo o que ainda vale nela: escolhas que não existem na
+ * nova linha passam para a primeira opção disponível; detalhes de fora saem.
+ */
+function withLinha(piece: PieceRequest, linha: string): PieceRequest {
+  const next: PieceRequest = { ...piece, linha }
+  for (const field of SINGLE_FIELDS) {
+    const options = optionsForLinha(atelierOptions[field], linha)
+    if (!options.some((o) => o.id === piece[field])) next[field] = options[0]?.id ?? ''
+  }
+  next.detalhes = piece.detalhes.filter((id) => {
+    const option = atelierOptions.detalhes.find((o) => o.id === id)
+    return option !== undefined && fitsLinha(option, linha)
+  })
+  return next
+}
 
 /** Tela "Criar peça": formulário do ateliê digital + resultado da IA. */
 export function AtelierStudio() {
@@ -81,12 +101,19 @@ export function AtelierStudio() {
               create(0)
             }}
           >
-            {(['peca', 'tecido', 'cor', 'silhueta', 'colecao'] as const).map((field) => (
+            <OptionGroup
+              legend={atelierPage.fields.linha}
+              name="linha"
+              options={atelierOptions.linha}
+              selected={[piece.linha]}
+              onToggle={(linha) => setPiece((p) => withLinha(p, linha))}
+            />
+            {SINGLE_FIELDS.map((field) => (
               <OptionGroup
                 key={field}
                 legend={atelierPage.fields[field]}
                 name={field}
-                options={atelierOptions[field]}
+                options={optionsForLinha(atelierOptions[field], piece.linha)}
                 selected={[piece[field]]}
                 onToggle={setSingle(field)}
               />
@@ -94,7 +121,7 @@ export function AtelierStudio() {
             <OptionGroup
               legend={atelierPage.fields.detalhes}
               name="detalhes"
-              options={atelierOptions.detalhes}
+              options={optionsForLinha(atelierOptions.detalhes, piece.linha)}
               selected={piece.detalhes}
               multiple
               max={MAX_DETALHES}

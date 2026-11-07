@@ -2,7 +2,7 @@
 
 Home de uma maison fictícia de alta costura. A estrutura das seções segue a home da [Sigma](https://www.sigma-global.com/en/index.html) e o movimento reproduz a sensação da [Floema](https://floema.com/), reimplementado do zero em GSAP a partir de valores medidos (nenhum código, imagem ou texto dos dois sites foi copiado). O visual vem do Figma da Maison Aurore.
 
-Além da home, há um **ateliê digital** com IA, de custo zero: a página **Criar peça** gera uma fotografia de moda a partir das escolhas do formulário, e o **Provador virtual** veste uma peça numa foto da pessoa.
+Além da home, há um **ateliê digital** com IA, de custo zero: a página **Criar peça** gera uma fotografia de moda a partir das escolhas do formulário, nas linhas **feminina** e **masculina**, e o **Provador virtual** veste uma peça numa foto da pessoa.
 
 ## Stack
 
@@ -16,7 +16,7 @@ npm run dev          # site + API em http://localhost:5173 (gera imagens se o .e
 npm run dev:ia       # igual, mas pelo vínculo AI remoto (precisa de `wrangler login`)
 npm run build        # checa os tipos e gera o site e o Worker em dist/
 npm run lint
-npm test             # 80 testes: site (jsdom) e Worker (Node), sem gastar cota
+npm test             # 88 testes: site (jsdom) e Worker (Node), sem gastar cota
 npm run deploy       # publica no Cloudflare
 ```
 
@@ -111,15 +111,15 @@ Cloudflare Worker (worker/) ── mesmo endereço do site, rotas /api/*
 | Arquivo                      | Papel                                                                        |
 | ---------------------------- | ---------------------------------------------------------------------------- |
 | `worker/index.ts`            | Rotas, checagem de origem e CORS                                             |
-| `worker/ai/prompt.ts`        | Valida os campos (só ids do catálogo) e monta o prompt de moda em inglês     |
+| `worker/ai/prompt.ts`        | Valida os campos (só ids do catálogo e da linha escolhida) e monta o prompt  |
 | `worker/ai/imageGen.ts`      | Chamada ao flux-1-schnell (4 passos): vínculo AI ou, no computador, API REST |
 | `worker/ai/tryOn.ts`         | Chamada ao Space do provador, com reserva e prazo total                      |
 | `worker/lib/`                | Cache no KV, hash, rate limit, tempo máximo e respostas de exemplo           |
-| `src/data/atelierOptions.ts` | Campos do formulário: rótulo para a tela e trecho do prompt para a IA        |
+| `src/data/atelierOptions.ts` | Campos do formulário por linha: rótulo para a tela e trecho do prompt        |
 | `src/lib/ai/client.ts`       | Cliente usado pelas telas; nunca lança erro: falha vira exemplo              |
 | `src/hooks/useAiRequest.ts`  | Estados das telas: ocioso, carregando (com segundos), pronto                 |
 
-**Resiliência**: quando a IA não responde (tempo esgotado, cota do dia, Space fora do ar, limite por IP), a tela mostra a imagem de exemplo de `public/exemplos/` e uma mensagem amigável (`src/data/aiMessages.ts`). Para trocar o exemplo da peça por uma foto gerada pela IA, rode `npm run dev` (com o token no `.env`) e, em outro terminal, `npm run exemplos:gerar`.
+**Resiliência**: quando a IA não responde (tempo esgotado, cota do dia, Space fora do ar, limite por IP), a tela mostra a imagem de exemplo da mesma linha (`public/exemplos/peca.jpg` ou `peca-masculina.jpg`) e uma mensagem amigável (`src/data/aiMessages.ts`). Para trocar o exemplo da peça por uma foto gerada pela IA, rode `npm run dev` (com o token no `.env`) e, em outro terminal, `npm run exemplos:gerar` (as duas linhas) ou `npm run exemplos:gerar -- masculina` (só uma).
 
 **Custos**: zero. O Workers AI tem 10.000 "neurons" grátis por dia (cerca de 170 imagens com 4 passos); o Space do Hugging Face é público. O rate limit (5 imagens e 2 provas por minuto por IP, em `wrangler.jsonc`) e o cache protegem essa cota.
 
@@ -156,7 +156,7 @@ Depois do deploy, acrescente o endereço publicado (por exemplo `https://maison-
 **Geração de imagem (Workers AI)**
 
 1. Preencha `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN` no `.env`, rode `npm run dev` e abra `http://localhost:5173/atelie-digital`.
-2. Escolha as opções e clique em "Criar peça": a foto aparece em poucos segundos.
+2. Escolha a linha (Feminina ou Masculina), as opções, e clique em "Criar peça": a foto aparece em poucos segundos.
 3. Clique de novo sem mudar nada: aparece "Esta peça já tinha sido criada", vinda do cache.
 4. Com as duas variáveis vazias (e sem `dev:ia`), a tela mostra o exemplo e a mensagem de indisponível: é o fallback funcionando.
 

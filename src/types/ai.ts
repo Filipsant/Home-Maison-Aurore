@@ -4,6 +4,8 @@
 
 /** Campos do formulário "Criar peça" (ids de `src/data/atelierOptions.ts`). */
 export interface PieceRequest {
+  /** "feminina" ou "masculina": define o modelo da foto e as opções válidas. */
+  linha: string
   peca: string
   tecido: string
   cor: string

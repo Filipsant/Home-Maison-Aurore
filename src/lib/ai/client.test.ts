@@ -3,6 +3,7 @@ import { tryOnLoadingMessage } from '@/data/aiMessages'
 import { apiUrl, generatePiece, tryOn } from './client'
 
 const piece = {
+  linha: 'feminina',
   peca: 'vestido',
   tecido: 'organza',
   cor: 'marfim',

@@ -1,9 +1,10 @@
 import { atelierOptions, MAX_DETALHES } from '../../src/data/atelierOptions'
+import { fitsLinha } from '../../src/lib/ai/atelier'
 import type { PieceRequest } from '../../src/types/ai'
 import type { AtelierOption } from '../../src/types/content'
 
 /** Versão do modelo de prompt: mudar o texto abaixo exige subir este número (invalida o cache). */
-export const PROMPT_VERSION = 'peca-v2'
+export const PROMPT_VERSION = 'peca-v3'
 
 /** Máximo de versões diferentes para os mesmos campos ("gerar outra versão"). */
 export const MAX_VARIANTE = 9
@@ -13,27 +14,36 @@ const find = (list: AtelierOption[], id: unknown) =>
 
 /**
  * Valida o corpo do pedido contra o catálogo. Devolve `null` se algum campo
- * não existir: o Worker nunca repassa texto livre ao modelo.
+ * não existir ou não pertencer à linha escolhida: o Worker nunca repassa texto
+ * livre ao modelo. Sem `linha` (clientes antigos), vale a feminina.
  */
 export function parsePieceRequest(body: unknown): PieceRequest | null {
   if (typeof body !== 'object' || body === null) return null
   const b = body as Record<string, unknown>
-  const peca = find(atelierOptions.peca, b.peca)
-  const tecido = find(atelierOptions.tecido, b.tecido)
-  const cor = find(atelierOptions.cor, b.cor)
-  const silhueta = find(atelierOptions.silhueta, b.silhueta)
-  const colecao = find(atelierOptions.colecao, b.colecao)
+  const linha = find(atelierOptions.linha, b.linha ?? 'feminina')
+  if (!linha) return null
+  const inLinha = (list: AtelierOption[], id: unknown) => {
+    const option = find(list, id)
+    return option && fitsLinha(option, linha.id) ? option : undefined
+  }
+
+  const peca = inLinha(atelierOptions.peca, b.peca)
+  const tecido = inLinha(atelierOptions.tecido, b.tecido)
+  const cor = inLinha(atelierOptions.cor, b.cor)
+  const silhueta = inLinha(atelierOptions.silhueta, b.silhueta)
+  const colecao = inLinha(atelierOptions.colecao, b.colecao)
   if (!peca || !tecido || !cor || !silhueta || !colecao) return null
 
   const rawDetalhes = Array.isArray(b.detalhes) ? b.detalhes : []
   if (rawDetalhes.length > MAX_DETALHES) return null
-  const detalhes = rawDetalhes.map((id) => find(atelierOptions.detalhes, id))
+  const detalhes = rawDetalhes.map((id) => inLinha(atelierOptions.detalhes, id))
   if (detalhes.some((d) => !d)) return null
 
   const variante = b.variante === undefined ? 0 : Number(b.variante)
   if (!Number.isInteger(variante) || variante < 0 || variante > MAX_VARIANTE) return null
 
   return {
+    linha: linha.id,
     peca: peca.id,
     tecido: tecido.id,
     cor: cor.id,
@@ -57,7 +67,7 @@ export function buildPiecePrompt(req: PieceRequest): string {
   const color = label(atelierOptions.cor, req.cor)
   const detalhes = req.detalhes.map((id) => label(atelierOptions.detalhes, id))
   const garment =
-    `A model wearing ${article(color)} ${color} ${label(atelierOptions.peca, req.peca)}` +
+    `A ${label(atelierOptions.linha, req.linha)} wearing ${article(color)} ${color} ${label(atelierOptions.peca, req.peca)}` +
     ` with a ${label(atelierOptions.silhueta, req.silhueta)}, made of ${label(atelierOptions.tecido, req.tecido)}` +
     (detalhes.length ? `, featuring ${joinList(detalhes)}.` : '.')
 

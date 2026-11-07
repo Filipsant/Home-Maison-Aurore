@@ -3,6 +3,7 @@ import type { AiResult, FallbackReason } from '../../src/types/ai'
 /** Imagens de exemplo pré-geradas (em public/exemplos), mostradas quando a IA falha. */
 export const FALLBACK_IMAGES = {
   peca: '/exemplos/peca.jpg',
+  pecaMasculina: '/exemplos/peca-masculina.jpg',
   provador: '/exemplos/provador.jpg',
 } as const
 

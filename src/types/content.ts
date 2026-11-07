@@ -120,14 +120,20 @@ export interface AtelierStep {
   media: Media
 }
 
+/** Linha do ateliê digital: define o modelo da foto e quais opções aparecem. */
+export type AtelierLinha = 'feminina' | 'masculina'
+
 /** Opção de um campo do ateliê digital: rótulo para a tela e trecho do prompt (em inglês) para a IA. */
 export interface AtelierOption {
   id: string
   label: string
   prompt: string
+  /** Linhas em que a opção aparece. Sem o campo, vale para as duas. */
+  linhas?: AtelierLinha[]
 }
 
 export interface AtelierOptions {
+  linha: (AtelierOption & { id: AtelierLinha })[]
   peca: AtelierOption[]
   tecido: AtelierOption[]
   cor: AtelierOption[]
