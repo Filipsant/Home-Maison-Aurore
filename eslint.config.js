@@ -15,7 +15,7 @@ const gsapImports = {
 }
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage']),
+  globalIgnores(['dist', 'coverage', 'worker/worker-configuration.d.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
