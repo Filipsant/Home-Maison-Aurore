@@ -1,0 +1,1 @@
+export { AiResultFrame } from './AiResultFrame'

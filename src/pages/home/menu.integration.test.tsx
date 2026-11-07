@@ -59,7 +59,7 @@ describe('Menu (Header + Menu juntos)', () => {
     expect(trigger).toHaveFocus()
   })
 
-  it('os links do menu levam às seções da home', async () => {
+  it('os links do menu levam às seções da home e às páginas do ateliê digital', async () => {
     setReducedMotion(true)
     const user = userEvent.setup()
     renderHeaderWithMenu()
@@ -67,6 +67,6 @@ describe('Menu (Header + Menu juntos)', () => {
     await user.click(screen.getByRole('button', { name: 'Menu' }))
     const nav = await screen.findByRole('navigation', { name: 'Menu' })
     const links = Array.from(nav.querySelectorAll('a')).map((a) => a.getAttribute('href'))
-    expect(links).toEqual(['#colecao', '#pecas', '#editorial', '#atelie'])
+    expect(links).toEqual(['/#colecao', '/#pecas', '/#editorial', '/#atelie', '/atelie-digital', '/provador'])
   })
 })

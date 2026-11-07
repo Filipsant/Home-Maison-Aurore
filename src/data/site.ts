@@ -3,15 +3,22 @@ import type { Site } from '@/types/content'
 export const site: Site = {
   name: 'Aurore',
   nav: [
-    { id: 'colecoes', label: 'Coleções', href: '#colecao' },
-    { id: 'pecas', label: 'Peças', href: '#pecas' },
-    { id: 'editorial', label: 'Editorial', href: '#editorial' },
-    { id: 'atelie', label: 'O ateliê', href: '#atelie' },
+    { id: 'colecoes', label: 'Coleções', href: '/#colecao' },
+    { id: 'pecas', label: 'Peças', href: '/#pecas' },
+    { id: 'editorial', label: 'Editorial', href: '/#editorial' },
+    { id: 'atelie', label: 'O ateliê', href: '/#atelie' },
   ],
   bookFitting: { label: 'Agendar prova', href: '#agendar' },
   menu: {
     address: '[Endereço do ateliê], [cidade]',
     bookFitting: { label: 'Agendar uma prova', href: '#agendar' },
+  },
+  digital: {
+    title: 'Ateliê digital',
+    links: [
+      { id: 'criar-peca', label: 'Criar peça', href: '/atelie-digital' },
+      { id: 'provador', label: 'Provador virtual', href: '/provador' },
+    ],
   },
   footer: {
     title: 'Venha provar no ateliê',
@@ -39,9 +46,11 @@ export const site: Site = {
         id: 'maison',
         title: 'Maison',
         items: [
-          { label: 'Coleções', href: '#colecao' },
-          { label: 'O ateliê', href: '#atelie' },
-          { label: 'Editorial', href: '#editorial' },
+          { label: 'Coleções', href: '/#colecao' },
+          { label: 'O ateliê', href: '/#atelie' },
+          { label: 'Editorial', href: '/#editorial' },
+          { label: 'Criar peça', href: '/atelie-digital' },
+          { label: 'Provador virtual', href: '/provador' },
         ],
       },
       {

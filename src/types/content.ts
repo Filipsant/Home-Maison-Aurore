@@ -156,6 +156,11 @@ export interface Site {
     address: string
     bookFitting: Link
   }
+  /** Páginas do ateliê digital (IA): aparecem no menu e no rodapé. */
+  digital: {
+    title: string
+    links: NavItem[]
+  }
   footer: {
     title: string
     form: {

@@ -105,7 +105,10 @@ export function Menu() {
             </Button>
           </div>
 
-          <nav aria-label="Menu" className="flex flex-1 items-center py-12">
+          <nav
+            aria-label="Menu"
+            className="flex flex-1 flex-col justify-center gap-10 py-12 md:flex-row md:items-center md:justify-between"
+          >
             <ul className="flex flex-col gap-3">
               {site.nav.map((item) => (
                 <li key={item.id} data-menu-item="">
@@ -119,6 +122,24 @@ export function Menu() {
                 </li>
               ))}
             </ul>
+
+            {/* Ateliê digital: as páginas com IA */}
+            <div data-menu-item="" className="flex flex-col gap-3 md:self-end">
+              <p className="text-caption text-texto-suave-escuro">{site.digital.title}</p>
+              <ul className="flex flex-col gap-1">
+                {site.digital.links.map((link) => (
+                  <li key={link.id}>
+                    <a
+                      href={link.href}
+                      onClick={go(link.href)}
+                      className="inline-block font-display text-display-s text-nevoa transition-colors duration-500 ease-out-expo hover:text-giz-claro"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </nav>
 
           <div

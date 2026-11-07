@@ -47,6 +47,9 @@ class ObserverStub {
   }
 }
 
+// jsdom não rola a página: scrollIntoView vira uma função vazia.
+Element.prototype.scrollIntoView = vi.fn()
+
 Object.defineProperty(window, 'IntersectionObserver', { writable: true, value: ObserverStub })
 Object.defineProperty(window, 'ResizeObserver', { writable: true, value: ObserverStub })
 

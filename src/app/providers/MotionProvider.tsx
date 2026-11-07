@@ -43,6 +43,9 @@ export function MotionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return
     refreshScroll()
+    // Chegou de outra página por um link como "/#colecao": a seção só existe agora.
+    const target = window.location.hash ? document.getElementById(window.location.hash.slice(1)) : null
+    target?.scrollIntoView()
     window.addEventListener('load', refreshScroll)
     return () => window.removeEventListener('load', refreshScroll)
   }, [ready])

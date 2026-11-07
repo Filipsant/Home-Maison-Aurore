@@ -1,13 +1,11 @@
-import { HomePage } from '@/pages/home'
 import { MenuProvider } from './providers/MenuProvider'
 import { MotionProvider } from './providers/MotionProvider'
+import { renderRoute } from './routes'
 
 export function App() {
   return (
     <MotionProvider>
-      <MenuProvider>
-        <HomePage />
-      </MenuProvider>
+      <MenuProvider>{renderRoute(window.location.pathname)}</MenuProvider>
     </MotionProvider>
   )
 }

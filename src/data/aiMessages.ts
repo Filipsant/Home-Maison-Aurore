@@ -11,7 +11,10 @@ export const aiMessages = {
       'O ateliê digital não respondeu agora. Mostramos uma imagem de exemplo; tente de novo em alguns minutos.',
     invalido: 'Não conseguimos ler esse pedido. Confira os campos e as fotos e tente de novo.',
   } satisfies Record<FallbackReason, string>,
-  cached: 'Esta peça já tinha sido criada: trouxemos a mesma imagem, sem custo.',
+  cached: {
+    peca: 'Esta peça já tinha sido criada: trouxemos a mesma imagem, sem custo.',
+    provador: 'Esta prova já tinha sido feita: trouxemos o mesmo resultado, sem custo.',
+  },
   loading: {
     peca: 'Desenhando a peça… costuma levar alguns segundos.',
     provador: [

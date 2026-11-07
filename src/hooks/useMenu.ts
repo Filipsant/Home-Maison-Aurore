@@ -47,12 +47,14 @@ export function useMenuController(): MenuController {
     setStatus((s) => (s === 'closing' ? 'closed' : s))
   }, [])
 
-  // Depois de fechar: segue para a âncora pedida, se houver.
+  // Depois de fechar: segue para o destino pedido. Âncora na mesma página só troca o hash;
+  // outra página (ou âncora de outra página) carrega o endereço.
   useEffect(() => {
     if (status !== 'closed' || !pendingHref.current) return
-    const href = pendingHref.current
+    const target = new URL(pendingHref.current, window.location.href)
     pendingHref.current = null
-    window.location.hash = href
+    if (target.pathname === window.location.pathname && target.hash) window.location.hash = target.hash
+    else window.location.assign(target.href)
   }, [status])
 
   return useMemo(
