@@ -2,19 +2,25 @@
 
 Home de uma maison fictícia de alta costura. A estrutura das seções segue a home da [Sigma](https://www.sigma-global.com/en/index.html) e o movimento reproduz a sensação da [Floema](https://floema.com/), reimplementado do zero em GSAP a partir de valores medidos (nenhum código, imagem ou texto dos dois sites foi copiado). O visual vem do Figma da Maison Aurore.
 
+Além da home, há um **ateliê digital** com IA, de custo zero: a página **Criar peça** gera uma fotografia de moda a partir das escolhas do formulário, e o **Provador virtual** veste uma peça numa foto da pessoa.
+
 ## Stack
 
-React 18, TypeScript (strict), Vite, Tailwind CSS 4, shadcn/ui (Radix), GSAP 3 (ScrollTrigger, SplitText, `useGSAP`), Lenis, Vitest + Testing Library, ESLint + Prettier.
+React 18, TypeScript (strict), Vite, Tailwind CSS 4, shadcn/ui (Radix), GSAP 3 (ScrollTrigger, SplitText, `useGSAP`), Lenis, Vitest + Testing Library, ESLint + Prettier. Back-end: Cloudflare Worker em TypeScript, com Workers AI e `@gradio/client`.
 
 ## Como rodar
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # checa os tipos e gera dist/
+npm run dev          # site + API em http://localhost:5173 (sem login; a geração de imagem cai no exemplo)
+npm run dev:ia       # igual, mas com o Workers AI de verdade (precisa de login no Cloudflare)
+npm run build        # checa os tipos e gera o site e o Worker em dist/
 npm run lint
-npm test
+npm test             # 74 testes: site (jsdom) e Worker (Node), sem gastar cota
+npm run deploy       # publica no Cloudflare
 ```
+
+Páginas: `/` (home), `/atelie-digital` (Criar peça) e `/provador` (Provador virtual). Os links ficam no menu e no rodapé.
 
 ## Seções (ordem da Sigma)
 
@@ -24,15 +30,16 @@ Header e Menu, FeatureHero (coleção Lumière), NewArrivals, FeaturedPieces, Ed
 
 ```
 src/
-├── app/             App e providers (movimento, menu)
-├── pages/home/      HomePage: só compõe as seções
+├── app/             App, rotas (routes.tsx) e providers (movimento, menu)
+├── pages/           home, atelie-digital e provador: só compõem as seções
 ├── sections/        uma pasta por seção: Componente.tsx + componente.animation.ts
 ├── components/ui/   shadcn (Button, Sheet, Input, Label) com a paleta da maison
-├── components/shared/  Container, SectionHeading, TextLink, Photo, VideoTeaser
+├── components/shared/  Container, SectionHeading, TextLink, Photo, VideoTeaser, OptionGroup, ImageInput, AiResultFrame
 ├── animations/      gsap.ts, tokens.ts, smoothScroll.ts, presets/, hooks/
 ├── data/            todo o conteúdo, tipado
 ├── types/           tipos do conteúdo
 └── styles/          globals.css: tema do Tailwind (cores, tipografia, curvas)
+worker/              Cloudflare Worker: API de IA (ver "Integrações de IA")
 ```
 
 Regras, verificadas pelo ESLint e pelos testes:
@@ -47,12 +54,12 @@ Regras, verificadas pelo ESLint e pelos testes:
 
 O estudo completo está em [`docs/motion-study.md`](docs/motion-study.md): catálogo com 39 efeitos medidos na Floema, os presets derivados e o mapa padrão → seção. Os presets ficam em `src/animations/presets/`:
 
-| Preset | Onde |
-|---|---|
-| `textReveal` (linhas descendo na abertura, subindo no scroll) | títulos e parágrafos |
-| `imageReveal` (cortina de cor + imagem) | fotos e vídeos |
-| `cascade` (colunas com deslocamento crescente) | Editorial |
-| `riseIn`, `lineDraw`, `parallax`, `headerTheme` | listas, linhas finas, fundo do Arquivo, assinatura do rodapé, tema do header |
+| Preset                                                        | Onde                                                                         |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `textReveal` (linhas descendo na abertura, subindo no scroll) | títulos e parágrafos                                                         |
+| `imageReveal` (cortina de cor + imagem)                       | fotos e vídeos                                                               |
+| `cascade` (colunas com deslocamento crescente)                | Editorial                                                                    |
+| `riseIn`, `lineDraw`, `parallax`, `headerTheme`               | listas, linhas finas, fundo do Arquivo, assinatura do rodapé, tema do header |
 
 Com `prefers-reduced-motion`, a página aparece no estado final: sem smooth scroll, sem scrub, sem parallax e sem autoplay de vídeo.
 
@@ -83,9 +90,91 @@ media: {
 
 Coloque os arquivos em `public/`. Endereço, contatos e redes do rodapé ficam em `src/data/site.ts`: itens sem `href` aparecem como texto até serem preenchidos.
 
-## Variáveis de ambiente
+## Integrações de IA
 
-O site em si não precisa de nenhuma. O arquivo [`.env.example`](.env.example) documenta as variáveis da futura integração de IA. Copie para `.env` (que não vai para o Git) e nunca use o prefixo `VITE_` em chaves: tudo com esse prefixo fica público no navegador.
+### Arquitetura
+
+```
+Navegador ── /atelie-digital, /provador
+    │  (fotos reduzidas no navegador para até 1024px)
+    ▼
+Cloudflare Worker (worker/) ── mesmo endereço do site, rotas /api/*
+    ├─ origem permitida? ── não → 403
+    ├─ resultado no cache (KV, chave = SHA-256 do pedido)? ── sim → devolve na hora, sem gastar cota
+    ├─ rate limit por IP ── estourou → imagem de exemplo + "tente de novo em instantes"
+    ├─ POST /api/pecas/imagem ─→ Workers AI: @cf/black-forest-labs/flux-1-schnell (tempo máx. 20s)
+    ├─ POST /api/provador ────→ Space yisol/IDM-VTON via @gradio/client
+    │                            └─ falhou? tenta Nymbo/Virtual-Try-On (mesma API) dentro do prazo de 2 min
+    └─ GET /api/imagens/:hash ─→ serve o resultado guardado (cache longo no navegador)
+```
+
+| Arquivo                      | Papel                                                                    |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| `worker/index.ts`            | Rotas, checagem de origem e CORS                                         |
+| `worker/ai/prompt.ts`        | Valida os campos (só ids do catálogo) e monta o prompt de moda em inglês |
+| `worker/ai/imageGen.ts`      | Chamada ao flux-1-schnell (4 passos)                                     |
+| `worker/ai/tryOn.ts`         | Chamada ao Space do provador, com reserva e prazo total                  |
+| `worker/lib/`                | Cache no KV, hash, rate limit, tempo máximo e respostas de exemplo       |
+| `src/data/atelierOptions.ts` | Campos do formulário: rótulo para a tela e trecho do prompt para a IA    |
+| `src/lib/ai/client.ts`       | Cliente usado pelas telas; nunca lança erro: falha vira exemplo          |
+| `src/hooks/useAiRequest.ts`  | Estados das telas: ocioso, carregando (com segundos), pronto             |
+
+**Resiliência**: quando a IA não responde (tempo esgotado, cota do dia, Space fora do ar, limite por IP), a tela mostra a imagem de exemplo de `public/exemplos/` e uma mensagem amigável (`src/data/aiMessages.ts`). Para trocar o exemplo da peça por uma foto gerada pela IA, rode `npm run dev:ia` e, em outro terminal, `npm run exemplos:gerar`.
+
+**Custos**: zero. O Workers AI tem 10.000 "neurons" grátis por dia (cerca de 170 imagens com 4 passos); o Space do Hugging Face é público. O rate limit (5 imagens e 2 provas por minuto por IP, em `wrangler.jsonc`) e o cache protegem essa cota.
+
+### Variáveis de ambiente
+
+Copie [`.env.example`](.env.example) para `.env` (que não vai para o Git). O Worker lê o `.env` em desenvolvimento; em produção, os segredos são cadastrados com `npx wrangler secret put`.
+
+| Variável                                        | Onde                | Para quê                                                                                                                                        |
+| ----------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HF_TOKEN`                                      | Worker (secreta)    | Token "Read" do Hugging Face. Opcional; aumenta a cota de GPU do provador.                                                                      |
+| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | só o wrangler (CLI) | Login para `dev:ia` e `deploy`. Alternativa: `npx wrangler login`. O token precisa do modelo "Edit Cloudflare Workers" mais "Workers AI: Edit". |
+| `TRYON_SPACE`, `TRYON_SPACE_RESERVA`            | Worker              | Spaces do provador (principal e reserva).                                                                                                       |
+| `ALLOWED_ORIGINS`                               | Worker              | Outros domínios que podem chamar a API (o próprio site é sempre aceito).                                                                        |
+| `IMAGE_TIMEOUT_MS`, `TRYON_TIMEOUT_MS`          | Worker              | Tempo máximo antes do exemplo.                                                                                                                  |
+| `VITE_AI_API_URL`                               | navegador (público) | Endereço da API, se ficar em outro domínio. Vazio = mesmo endereço.                                                                             |
+
+Nunca use o prefixo `VITE_` em chaves: o Vite embute essas variáveis no site e qualquer pessoa consegue lê-las.
+
+### Publicar
+
+```bash
+npx wrangler login                        # ou token no .env
+npx wrangler kv namespace create CACHE    # cole o id em wrangler.jsonc ("kv_namespaces")
+npx wrangler secret put HF_TOKEN          # opcional
+npm run deploy
+```
+
+Depois do deploy, acrescente o endereço publicado (por exemplo `https://maison-aurore.<conta>.workers.dev`) em `ALLOWED_ORIGINS` só se outro domínio for chamar a API.
+
+### Como testar cada integração
+
+**Testes automáticos** (`npm test`): validação do formulário e do prompt, cache, rate limit, tempo esgotado, cota esgotada, origem recusada, provador com reserva e as telas, com a IA simulada.
+
+**Geração de imagem (Workers AI)**
+
+1. `npm run dev:ia` e abra `http://localhost:5173/atelie-digital`.
+2. Escolha as opções e clique em "Criar peça": a foto aparece em poucos segundos.
+3. Clique de novo sem mudar nada: aparece "Esta peça já tinha sido criada", vinda do cache.
+4. Sem `dev:ia` (só `npm run dev`), a tela mostra o exemplo e a mensagem de indisponível: é o fallback funcionando.
+
+Pelo terminal:
+
+```bash
+curl -X POST http://localhost:5173/api/pecas/imagem -H "Content-Type: application/json" \
+  -d '{"peca":"vestido","tecido":"organza","cor":"marfim","silhueta":"sereia","detalhes":["bordado"],"colecao":"lumiere"}'
+```
+
+**Provador virtual (Hugging Face)**: funciona até com `npm run dev`.
+
+1. Abra `http://localhost:5173/provador` e envie uma foto de corpo inteiro e a foto de uma peça (só a peça).
+2. Clique em "Provar": o resultado chega em 30s a 2 min, conforme a fila.
+3. Envie as mesmas fotos de novo: o resultado vem do cache, na hora.
+4. Ou crie uma peça em "Criar peça" e use "Provar esta peça": ela já chega ao provador.
+
+**Rate limit**: faça mais de 2 provas diferentes em menos de 1 minuto; a terceira mostra "Muitos pedidos em pouco tempo".
 
 ## Acessibilidade
 
