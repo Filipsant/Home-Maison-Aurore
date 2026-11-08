@@ -65,32 +65,35 @@ O estudo completo está em [`docs/motion-study.md`](docs/motion-study.md): catá
 
 Com `prefers-reduced-motion`, a página aparece no estado final: sem smooth scroll, sem scrub, sem parallax e sem autoplay de vídeo.
 
-## Trocar placeholders por fotos e vídeos
+## Fotos e vídeos
 
-As imagens são placeholders em tons da paleta, com legenda entre colchetes. Para usar mídia real, edite só o arquivo de `src/data/`; os componentes não mudam.
+A home usa fotos e vídeos de acervos de uso livre (The Met e Rijksmuseum em CC0, Pexels com licença livre): o hero tem o vídeo de um vestido de gala numa rua à noite sobre a foto de manequins em musselina, e os demais cards têm peças de alta costura (House of Worth, Maison Pingat), editoriais, gravuras de moda dos anos 1930 e dois filmes de ateliê. Fontes, autores e licenças de cada arquivo estão em [`docs/creditos-midia.md`](docs/creditos-midia.md).
+
+Os arquivos ficam em `public/fotos/` (WebP, recortados no formato de cada card) e `public/videos/` (WebM + MP4, sem áudio, com poster). Para trocar uma imagem, substitua o arquivo ou edite só o `src/data/`; os componentes não mudam.
 
 ```ts
 // src/data/newArrivals.ts — foto
 media: {
-  caption: '[Foto] Vestido Aube',
+  caption: 'Vestido Aube',
   tone: 'musselina',          // cor da cortina e do fundo enquanto carrega
   aspect: 4 / 5,
-  src: '/fotos/vestido-aube.jpg',
-  alt: 'Vestido Aube em organza de seda, visto de frente',
+  src: '/fotos/vestido-aube.webp',
+  alt: 'Vestido de baile rosa em cetim de seda, com espigas bordadas em dourado',
 },
 
-// src/data/videoFeatures.ts — vídeo (mudo, em loop, pausa fora da tela)
+// src/data/videoFeatures.ts — vídeo (mudo, em loop, só toca na tela, com botão de pausa)
 media: {
-  caption: '[Vídeo] bastidores do ateliê',
+  caption: 'Bastidores do ateliê',
   tone: 'veludo',
   aspect: 4 / 5,
-  videoSrc: '/videos/atelie.mp4',
-  poster: '/videos/atelie.jpg',
-  alt: 'Mãos bordando pérolas em organza',
+  videoWebm: '/videos/atelie-bastidores.webm', // Chrome, Edge, Firefox (mais leve)
+  videoSrc: '/videos/atelie-bastidores.mp4',   // Safari e iPhone
+  poster: '/videos/poster-atelie.webp',
+  alt: 'Vídeo: mãos ajustando a fita métrica num manequim',
 },
 ```
 
-Coloque os arquivos em `public/`. Endereço, contatos e redes do rodapé ficam em `src/data/site.ts`: itens sem `href` aparecem como texto até serem preenchidos.
+O hero (`src/data/hero.ts`) aceita o mesmo formato em `finalPiece` (vídeo ou foto) e `toile` (foto); sem `src`/`videoSrc`, volta aos desenhos do Figma. Com movimento reduzido, nenhum vídeo toca sozinho: fica o poster. Endereço, contatos e redes do rodapé ficam em `src/data/site.ts`: itens sem `href` aparecem como texto até serem preenchidos.
 
 ## Integrações
 
