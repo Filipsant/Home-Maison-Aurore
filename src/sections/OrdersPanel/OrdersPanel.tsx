@@ -180,6 +180,31 @@ function OrderItem({ order, onRemove }: { order: Order; onRemove: () => void }) 
         </div>
       </div>
 
+      {(order.provas ?? []).length > 0 && (
+        <div className="md:col-span-12">
+          <p className="mb-2 text-caption text-texto-suave">{t.provas}</p>
+          <ul className="flex flex-wrap gap-3">
+            {(order.provas ?? []).map((prova, i) => (
+              <li key={prova}>
+                <a
+                  href={apiUrl(`/api/imagens/${prova}`)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="relative block aspect-3/4 w-28 overflow-hidden bg-musselina focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--focus-ring)"
+                >
+                  <img
+                    src={apiUrl(`/api/imagens/${prova}`)}
+                    alt={t.provaAlt(i + 1)}
+                    loading="lazy"
+                    className="absolute inset-0 size-full object-cover"
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="md:col-span-12">
         <Button variant="outline" onClick={onRemove}>
           {t.remove}

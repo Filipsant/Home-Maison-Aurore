@@ -180,15 +180,3 @@ export const hover = {
 export const loop = {
   bob: { duration: 2, yPx: 3, opacity: [0.8, 0.95] },
 } as const
-
-/** Manequim 3D do provador (src/lib/mannequin). */
-export const mannequin = {
-  /** Giro automático (OrbitControls.autoRotateSpeed: 2 = uma volta a cada 30s). */
-  autoRotateSpeed: 1.2,
-  /** Amortecimento do arrasto e dos giros pelos botões (0 a 1; menor = mais suave). */
-  damping: 0.08,
-  /** Giro de cada clique nos botões, em graus. */
-  turnStepDeg: 45,
-  /** O giro automático volta depois de tantos segundos sem mexer. */
-  resumeAfterSeconds: 6,
-} as const

@@ -23,6 +23,7 @@ const order: Order = {
   email: 'ana@email.com',
   telefone: '+55 11 99999-0000',
   observacoes: 'Casamento em março.',
+  provas: ['c'.repeat(64)],
 }
 
 function mockPanel() {
@@ -73,7 +74,14 @@ describe('Painel de pedidos do ateliê', () => {
     expect(card.getByRole('link', { name: 'ana@email.com' })).toHaveAttribute('href', 'mailto:ana@email.com')
     expect(card.getByText('Vestido')).toBeInTheDocument()
     expect(card.getByText('58.5')).toBeInTheDocument()
-    expect(card.getByRole('img')).toHaveAttribute('src', `/api/imagens/${'e'.repeat(64)}`)
+    expect(card.getByRole('img', { name: /Peça gerada por IA/ })).toHaveAttribute(
+      'src',
+      `/api/imagens/${'e'.repeat(64)}`,
+    )
+    expect(card.getByRole('img', { name: /Prova virtual 1/ })).toHaveAttribute(
+      'src',
+      `/api/imagens/${'c'.repeat(64)}`,
+    )
 
     await user.click(card.getByRole('button', { name: 'Apagar pedido' }))
     expect(deleted).toEqual([`/api/pedidos/${order.id}`])

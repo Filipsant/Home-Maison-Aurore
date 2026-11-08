@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSectionAnimation } from '@/animations/hooks'
 import { autoReveal } from '@/animations/presets'
 import { AiResultFrame } from '@/components/shared/AiResultFrame'
@@ -13,6 +13,8 @@ import { useAiRequest } from '@/hooks/useAiRequest'
 import { fitsLinha, optionsForLinha } from '@/lib/ai/atelier'
 import { generatePiece } from '@/lib/ai/client'
 import { altForPiece } from '@/lib/ai/describe'
+import { fetchPiece } from '@/lib/api/orders'
+import { isPieceId } from '@/lib/orders/validate'
 import type { PieceRequest } from '@/types/ai'
 
 type SingleField = 'peca' | 'tecido' | 'cor' | 'silhueta' | 'colecao'
@@ -55,7 +57,25 @@ export function AtelierStudio() {
   const [variante, setVariante] = useState(0)
   // Peça que gerou o resultado atual (o formulário pode mudar depois).
   const [generated, setGenerated] = useState<PieceRequest | null>(null)
-  const { state, run } = useAiRequest(generatePiece)
+  const { state, run, show } = useAiRequest(generatePiece)
+
+  // Vindo do provador ("Ajustar a peça"): reabre a peça com as mesmas escolhas e a mesma foto.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('peca')
+    if (!isPieceId(id)) return
+    const controller = new AbortController()
+    fetchPiece(id, controller.signal)
+      .then((found) => {
+        if (found.status !== 'ok') return
+        const { variante: saved = 0, ...choices } = found.peca
+        setPiece(choices)
+        setVariante(saved)
+        setGenerated(choices)
+        show({ status: 'ok', id: found.id, imageUrl: found.imageUrl, cached: false })
+      })
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [show])
 
   useSectionAnimation(ref, (root, { reduced }) => {
     autoReveal(root, { reduced })

@@ -20,6 +20,8 @@ export const ordersPanel = {
     measures: 'Medidas (cm)',
     notes: 'Observações',
     photoAlt: 'Peça gerada por IA para o pedido',
+    provas: 'Provas virtuais (abrem em tamanho real)',
+    provaAlt: (n: number) => `Prova virtual ${n} da cliente, gerada por IA`,
     remove: 'Apagar pedido',
     confirmRemove: 'Apagar este pedido de vez? As medidas e os dados de contato somem.',
   },

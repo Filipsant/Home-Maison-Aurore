@@ -44,6 +44,13 @@ export function useAiRequest<TArgs>(request: (args: TArgs, signal: AbortSignal) 
     [request],
   )
 
+  /** Mostra um resultado que já existe (ex.: peça reaberta pelo endereço), sem chamar a API. */
+  const show = useCallback((result: AiResult) => {
+    controller.current?.abort()
+    stopTimer()
+    setState({ phase: 'done', result })
+  }, [])
+
   const reset = useCallback(() => {
     controller.current?.abort()
     stopTimer()
@@ -58,5 +65,5 @@ export function useAiRequest<TArgs>(request: (args: TArgs, signal: AbortSignal) 
     [],
   )
 
-  return { state, run, reset }
+  return { state, run, show, reset }
 }

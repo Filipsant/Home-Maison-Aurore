@@ -42,7 +42,7 @@ describe('Criar peça (ateliê digital)', () => {
       colecao: 'lumiere',
       variante: 0,
     })
-    const tryOnLink = screen.getByRole('link', { name: 'Ver em 3D e tirar medidas' })
+    const tryOnLink = screen.getByRole('link', { name: 'Provar em você' })
     expect(tryOnLink.getAttribute('href')).toContain(`/provador?peca=${'a'.repeat(64)}`)
 
     await user.click(screen.getByRole('button', { name: 'Gerar outra versão' }))
@@ -99,6 +99,43 @@ describe('Criar peça (ateliê digital)', () => {
     expect(screen.getByRole('radio', { name: 'Ajustada' })).toBeChecked()
     expect(screen.queryByRole('checkbox', { name: 'Lapela de cetim' })).not.toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: 'Bordado à mão' })).toBeChecked()
+  })
+
+  it('vindo do provador (?peca=), reabre a peça com as mesmas escolhas e a mesma foto', async () => {
+    setReducedMotion(true)
+    const id = 'b'.repeat(64)
+    window.history.pushState({}, '', `/atelie-digital?peca=${id}`)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          Response.json({
+            id,
+            imageUrl: `/api/imagens/${id}`,
+            peca: {
+              linha: 'masculina',
+              peca: 'terno',
+              tecido: 'la-fria',
+              cor: 'azul-noite',
+              silhueta: 'reta',
+              detalhes: ['pesponto'],
+              colecao: 'terre',
+              variante: 2,
+            },
+          }),
+        ),
+      ),
+    )
+    render(<AtelierStudio />)
+    expect(await screen.findByRole('img', { name: /Fotografia gerada por IA: Terno/ })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Masculina' })).toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Terno' })).toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Azul-noite' })).toBeChecked()
+    expect(screen.getByRole('link', { name: 'Provar em você' })).toHaveAttribute(
+      'href',
+      `/provador?peca=${id}`,
+    )
+    window.history.pushState({}, '', '/')
   })
 
   it('limita os detalhes a 3: os demais ficam desabilitados', async () => {

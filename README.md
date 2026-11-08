@@ -2,11 +2,11 @@
 
 Home de uma maison fictícia de alta costura. A estrutura das seções segue a home da [Sigma](https://www.sigma-global.com/en/index.html) e o movimento reproduz a sensação da [Floema](https://floema.com/), reimplementado do zero em GSAP a partir de valores medidos (nenhum código, imagem ou texto dos dois sites foi copiado). O visual vem do Figma da Maison Aurore.
 
-Além da home, há um **ateliê digital** com IA, de custo zero: a página **Criar peça** gera uma fotografia de moda a partir das escolhas do formulário, nas linhas **feminina** e **masculina**, e o **Provador 3D** veste essa peça num manequim 3D com as medidas da cliente, que envia o pedido sob medida ao ateliê.
+Além da home, há um **ateliê digital** com IA, de custo zero: a página **Criar peça** gera uma fotografia de moda a partir das escolhas do formulário, nas linhas **feminina** e **masculina**, e o **Provador virtual** veste essa peça na própria cliente: ela envia fotos do corpo (frente, costas e lado) e as medidas, a IA gera a prova, a cliente pede correções com as próprias palavras e envia o pedido sob medida ao ateliê.
 
 ## Stack
 
-React 18, TypeScript (strict), Vite, Tailwind CSS 4, shadcn/ui (Radix), GSAP 3 (ScrollTrigger, SplitText, `useGSAP`), Lenis, Vitest + Testing Library, ESLint + Prettier. Manequim 3D em three.js (carregado só no provador). Back-end: Cloudflare Worker em TypeScript, com Workers AI e Workers KV.
+React 18, TypeScript (strict), Vite, Tailwind CSS 4, shadcn/ui (Radix), GSAP 3 (ScrollTrigger, SplitText, `useGSAP`), Lenis, Vitest + Testing Library, ESLint + Prettier. Back-end: Cloudflare Worker em TypeScript, com Workers AI (FLUX.1 [schnell] para as peças, FLUX.2 [klein] para as provas) e Workers KV.
 
 ## Como rodar
 
@@ -16,11 +16,11 @@ npm run dev          # site + API em http://localhost:5173 (gera imagens se o .e
 npm run dev:ia       # igual, mas pelo vínculo AI remoto (precisa de `wrangler login`)
 npm run build        # checa os tipos e gera o site e o Worker em dist/
 npm run lint
-npm test             # 115 testes: site (jsdom) e Worker (Node), sem gastar cota
+npm test             # 124 testes: site (jsdom) e Worker (Node), sem gastar cota
 npm run deploy       # publica no Cloudflare
 ```
 
-Páginas: `/` (home), `/atelie-digital` (Criar peça) e `/provador` (Provador 3D), com links no menu e no rodapé. O painel do ateliê fica em `/atelie/pedidos` (com senha, fora do menu e dos buscadores).
+Páginas: `/` (home), `/atelie-digital` (Criar peça) e `/provador` (Provador virtual), com links no menu e no rodapé. O painel do ateliê fica em `/atelie/pedidos` (com senha, fora do menu e dos buscadores).
 
 ## Seções (ordem da Sigma)
 
@@ -34,8 +34,8 @@ src/
 ├── pages/           home, atelie-digital, provador e pedidos: só compõem as seções
 ├── sections/        uma pasta por seção: Componente.tsx + componente.animation.ts
 ├── components/ui/   shadcn (Button, Sheet, Input, Label) com a paleta da maison
-├── components/shared/  Container, SectionHeading, TextLink, Photo, VideoTeaser, OptionGroup, AiResultFrame, Mannequin3D
-├── lib/mannequin/   manequim 3D: corpo pelas medidas (body.ts), roupas (figure.ts), cena (scene.ts)
+├── components/shared/  Container, SectionHeading, TextLink, Photo, VideoTeaser, OptionGroup, ImageInput, AiResultFrame
+├── lib/api/         clientes das provas (fitting.ts) e dos pedidos (orders.ts)
 ├── lib/orders/      validação do pedido, a mesma na tela e no Worker
 ├── animations/      gsap.ts, tokens.ts, smoothScroll.ts, presets/, hooks/
 ├── data/            todo o conteúdo, tipado
@@ -97,7 +97,8 @@ Coloque os arquivos em `public/`. Endereço, contatos e redes do rodapé ficam e
 ### Arquitetura
 
 ```
-Navegador ── /atelie-digital (Criar peça) ── /provador (Provador 3D) ── /atelie/pedidos (painel)
+Navegador ── /atelie-digital (Criar peça) ⇄ /provador (Provador virtual) ── /atelie/pedidos (painel)
+    │  (fotos do corpo reduzidas no navegador para até 1024px)
     ▼
 Cloudflare Worker (worker/) ── mesmo endereço do site, rotas /api/*
     ├─ origem permitida? ── não → 403
@@ -105,32 +106,36 @@ Cloudflare Worker (worker/) ── mesmo endereço do site, rotas /api/*
     │                            senão: rate limit por IP → Workers AI flux-1-schnell (tempo máx. 20s)
     │                            guarda a foto (img:<hash>) e as escolhas (peca:<hash>) por 30 dias
     ├─ GET  /api/imagens/:hash ─→ a foto guardada (cache longo no navegador)
-    ├─ GET  /api/pecas/:hash ───→ as escolhas da peça, para o provador 3D vestir o manequim
-    ├─ POST /api/pedidos ───────→ peça + medidas + contato → KV (pedido:<id>), sem prazo de validade
+    ├─ GET  /api/pecas/:hash ───→ as escolhas da peça (provador e "Ajustar a peça")
+    ├─ POST /api/provas ────────→ foto do corpo + peça + medidas → FLUX.2 [klein] 4B (tempo máx. 45s)
+    │                            correção: prova anterior + texto da cliente (passa por um filtro)
+    │                            guarda só a prova (img:<hash>, prova:<hash>) por 7 dias; a foto nunca
+    ├─ POST /api/pedidos ───────→ peça + medidas + contato + provas → KV (pedido:<id>), sem prazo
     └─ GET/DELETE /api/pedidos ─→ painel do ateliê, com senha (ATELIE_SENHA)
 ```
 
-O **manequim 3D** é desenhado no navegador (three.js), sem IA e sem custo: o corpo sai das medidas digitadas e a roupa sai das escolhas do ateliê digital (peça, tecido, cor, silhueta, detalhes e coleção). O three.js só é baixado na página do provador.
+A **prova virtual** usa o FLUX.2 [klein] 4B, que edita imagens a partir de referências: a imagem 1 é a foto da cliente e a imagem 2 é a peça do ateliê digital. O prompt (fixo, em inglês) pede para manter rosto, corpo, pose e enquadramento e reproduzir a peça; as medidas entram como dados. A **correção** edita a prova anterior com o texto da cliente, mudando só o que foi pedido. Nos testes, o klein 4B preservou o rosto melhor que o 9B e o FLUX.2 [dev] (este último também inventou partes da roupa e é bem mais caro).
 
 | Arquivo                           | Papel                                                                          |
 | --------------------------------- | ------------------------------------------------------------------------------ |
 | `worker/index.ts`                 | Rotas, checagem de origem e CORS                                               |
 | `worker/ai/prompt.ts`             | Valida os campos (só ids do catálogo e da linha escolhida) e monta o prompt    |
-| `worker/ai/imageGen.ts`           | Chamada ao flux-1-schnell (4 passos): vínculo AI ou, no computador, API REST   |
+| `worker/ai/imageGen.ts`           | Chamadas ao Workers AI (schnell e FLUX.2): vínculo AI ou, no computador, REST  |
+| `worker/ai/fittingPrompt.ts`      | Prompt da prova e da correção, filtro da correção (despir, trocar rosto)       |
+| `worker/routes/fitting.ts`        | Prova virtual: valida fotos e campos, cache, limite por IP, FLUX.2             |
 | `worker/routes/orders.ts`         | Pedidos: validação, campo-isca contra robôs, limite por IP e painel com senha  |
 | `worker/lib/`                     | Cache no KV, hash, senha (comparação em tempo constante), rate limit, exemplos |
 | `src/data/atelierOptions.ts`      | Campos do formulário por linha: rótulo para a tela e trecho do prompt          |
 | `src/data/measurements.ts`        | Medidas de cada linha: limites, valor típico e "como medir"                    |
-| `src/data/mannequin.ts`           | Como cada escolha aparece no 3D: cor, tecido, partes da peça, luz da coleção   |
-| `src/lib/mannequin/`              | Corpo pelas medidas, roupas (lofts de anéis) e cena com giro                   |
+| `src/sections/FittingStudio/`     | Tela do provador: fotos, medidas, abas Frente/Costas/Lado, correções, pedido   |
 | `src/lib/orders/validate.ts`      | Validação do pedido, a mesma na tela e no Worker                               |
 | `src/lib/ai/client.ts`, `lib/api` | Clientes usados pelas telas; nunca lançam erro                                 |
 
-**Resiliência**: quando a IA de imagem não responde (tempo esgotado, cota do dia, limite por IP), a tela mostra a imagem de exemplo da mesma linha (`public/exemplos/peca.jpg` ou `peca-masculina.jpg`) e uma mensagem amigável (`src/data/aiMessages.ts`). Sem WebGL, o provador mostra um aviso no lugar do 3D e as medidas e o pedido continuam funcionando. Para trocar os exemplos por fotos geradas pela IA, rode `npm run dev` (com o token no `.env`) e, em outro terminal, `npm run exemplos:gerar` (as duas linhas) ou `npm run exemplos:gerar -- masculina` (só uma).
+**Resiliência**: quando a IA de imagem não responde (tempo esgotado, cota do dia, limite por IP), a tela mostra a imagem de exemplo da mesma linha (`public/exemplos/peca.jpg` ou `peca-masculina.jpg`) e uma mensagem amigável (`src/data/aiMessages.ts`). No provador, uma falha mostra a mensagem do motivo (limite, tempo, cota do dia, correção recusada) e mantém as fotos, as medidas e as provas anteriores. Para trocar os exemplos por fotos geradas pela IA, rode `npm run dev` (com o token no `.env`) e, em outro terminal, `npm run exemplos:gerar` (as duas linhas) ou `npm run exemplos:gerar -- masculina` (só uma).
 
-**Custos**: zero. O Workers AI tem 10.000 "neurons" grátis por dia (cerca de 170 imagens com 4 passos); o KV grátis cobre 100.000 leituras e 1.000 gravações por dia. O rate limit (5 imagens, 3 pedidos e 10 tentativas de senha por minuto por IP, em `wrangler.jsonc`) e o cache protegem essa cota.
+**Custos**: zero, dentro da cota grátis do Workers AI: 10.000 "neurons" por dia, divididos entre as peças (flux-1-schnell, barato) e as provas (FLUX.2 klein, mais caro por imagem, porque recebe duas imagens de referência). Quando a cota do dia acaba, as duas telas avisam e voltam a funcionar à meia-noite UTC (21h em Brasília). O custo exato de cada modelo aparece no painel do Cloudflare (Workers AI → Analytics). O KV grátis cobre 100.000 leituras e 1.000 gravações por dia. O rate limit (5 imagens, 6 provas, 3 pedidos e 10 tentativas de senha por minuto por IP, em `wrangler.jsonc`) e o cache protegem a cota.
 
-**Dados pessoais**: o pedido guarda nome, contato e medidas do corpo. A cliente autoriza antes de enviar (caixa obrigatória); só o painel com senha lê os pedidos, e o ateliê pode apagar cada um (o botão apaga de vez).
+**Dados pessoais**: as fotos do corpo nunca são guardadas: vão ao Workers AI só para gerar a prova. As provas ficam 7 dias no KV (para a cliente corrigir e enviar); se forem com o pedido, ficam com ele. A cliente confirma que as fotos são dela e que tem 18 anos ou mais antes de gerar, e autoriza guardar medidas, provas e contato antes de enviar o pedido. Só o painel com senha lê os pedidos, e o ateliê pode apagar cada um (o botão apaga de vez).
 
 ### Variáveis de ambiente
 
@@ -141,7 +146,7 @@ Copie [`.env.example`](.env.example) para `.env` (que não vai para o Git). O Wo
 | `ATELIE_SENHA`                                  | Worker (secreta)    | Senha do painel de pedidos. Sem ela, o painel fica fechado (os pedidos continuam sendo guardados).                                                                                                                                                                                                                 |
 | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | só no computador    | Com as duas, o Worker local chama o Workers AI pela API REST e `npm run dev` gera imagens (basta a permissão "Workers AI"). O wrangler também as usa em `dev:ia` e `deploy` (aí o token precisa de "Edit Cloudflare Workers" mais "Workers AI: Edit"; alternativa: `npx wrangler login`). Nunca vão para produção. |
 | `ALLOWED_ORIGINS`                               | Worker              | Outros domínios que podem chamar a API (o próprio site é sempre aceito).                                                                                                                                                                                                                                           |
-| `IMAGE_TIMEOUT_MS`                              | Worker              | Tempo máximo da geração de imagem antes do exemplo.                                                                                                                                                                                                                                                                |
+| `IMAGE_TIMEOUT_MS`, `PROVA_TIMEOUT_MS`          | Worker              | Tempo máximo da geração da peça (antes do exemplo) e da prova virtual.                                                                                                                                                                                                                                             |
 | `VITE_AI_API_URL`                               | navegador (público) | Endereço da API, se ficar em outro domínio. Vazio = mesmo endereço.                                                                                                                                                                                                                                                |
 
 Nunca use o prefixo `VITE_` em chaves: o Vite embute essas variáveis no site e qualquer pessoa consegue lê-las.
@@ -159,7 +164,7 @@ Depois do deploy, acrescente o endereço publicado (por exemplo `https://maison-
 
 ### Como testar
 
-**Testes automáticos** (`npm test`): validação do formulário, do prompt e do pedido, cache, rate limit, tempo esgotado, cota esgotada, origem recusada, senha do painel, campo-isca, todas as combinações de peça × silhueta no manequim 3D e as telas, com a IA simulada.
+**Testes automáticos** (`npm test`): validação do formulário, do prompt e do pedido, cache, rate limit, tempo esgotado, cota esgotada, origem recusada, senha do painel, campo-isca, prova virtual (foto, correção, filtro, histórico de versões, provas no pedido) e as telas, com a IA simulada.
 
 **Geração de imagem (Workers AI)**
 
@@ -175,17 +180,19 @@ curl -X POST http://localhost:5173/api/pecas/imagem -H "Content-Type: applicatio
   -d '{"linha":"feminina","peca":"vestido","tecido":"organza","cor":"marfim","silhueta":"sereia","detalhes":["bordado"],"colecao":"lumiere"}'
 ```
 
-**Provador 3D e pedido**
+**Provador virtual e pedido**
 
-1. Com uma peça criada, clique em "Ver em 3D e tirar medidas": o manequim aparece vestido com ela.
-2. Arraste (ou use as setas do teclado ou os botões) para girar; "Costas" mostra a parte de trás.
-3. Digite as medidas: o manequim muda na hora (campo vazio usa o valor típico, mostrado no próprio campo).
-4. Preencha nome, e-mail, marque a autorização e clique em "Enviar ao ateliê": aparece o código do pedido (ex.: `AUR-7K3F9Q`).
+1. Com uma peça criada, clique em "Provar em você".
+2. Envie a foto de frente (obrigatória) e, se quiser, de costas e de lado: corpo inteiro, roupas justas, fundo liso. Preencha as medidas que souber e confirme que as fotos são suas.
+3. Clique em "Gerar prova": cada foto vira uma prova (abas Frente, Costas e Lado), em poucos segundos.
+4. Em "O que precisa mudar?", escreva uma correção (ex.: "manga até o punho") e clique em "Aplicar correção": aparece a versão 2; "Voltar à versão anterior" desfaz.
+5. "Ajustar a peça" volta ao ateliê digital com as mesmas escolhas, para mudar a roupa e provar de novo.
+6. Preencha todas as medidas, nome e e-mail, autorize e clique em "Enviar ao ateliê": aparece o código do pedido (ex.: `AUR-7K3F9Q`).
 
-**Painel do ateliê**: abra `http://localhost:5173/atelie/pedidos`, digite a `ATELIE_SENHA` do `.env` e veja os pedidos (foto, ficha da peça, medidas e contato). "Apagar pedido" remove de vez.
+**Painel do ateliê**: abra `http://localhost:5173/atelie/pedidos`, digite a `ATELIE_SENHA` do `.env` e veja os pedidos (foto, ficha da peça, medidas e contato). As provas aparecem em miniatura e abrem em tamanho real. "Apagar pedido" remove de vez.
 
 **Rate limit**: envie 4 pedidos em menos de 1 minuto; o quarto mostra "Muitos envios em pouco tempo".
 
 ## Acessibilidade
 
-Elementos semânticos com `aria-labelledby` nas seções, link "Pular para o conteúdo", foco visível (giz sobre névoa, giz-claro sobre veludo), alvos de toque de no mínimo 44px nos botões, contraste mínimo de 5,5:1 nos textos e menu com foco preso, Esc e foco devolvido. A auditoria com axe-core não aponta nenhuma violação (desktop, celular, menu aberto, provador 3D e painel). No provador, o manequim tem texto alternativo com a peça e as medidas, gira pelo teclado e pelos botões e, com movimento reduzido, não gira sozinho; cada campo liga rótulo, dica e erro, e o foco vai ao primeiro campo com erro.
+Elementos semânticos com `aria-labelledby` nas seções, link "Pular para o conteúdo", foco visível (giz sobre névoa, giz-claro sobre veludo), alvos de toque de no mínimo 44px nos botões, contraste mínimo de 5,5:1 nos textos e menu com foco preso, Esc e foco devolvido. A auditoria com axe-core não aponta nenhuma violação (desktop, celular, menu aberto, provador e painel). No provador, as vistas são abas acessíveis (setas do teclado trocam de aba), cada prova tem texto alternativo, o estado da IA é anunciado a leitores de tela, cada campo liga rótulo, dica e erro, e o foco vai ao primeiro campo com erro.
