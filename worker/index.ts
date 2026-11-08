@@ -1,12 +1,13 @@
 import { getCachedImage, isHash } from './lib/cache'
 import { corsHeaders, isAllowedOrigin, jsonError, withHeaders } from './lib/http'
-import { handlePieceImage } from './routes/piece'
-import { handleTryOn } from './routes/tryOn'
+import { handleCreateOrder, handleDeleteOrder, handleListOrders } from './routes/orders'
+import { handleGetPiece, handlePieceImage } from './routes/piece'
 
 /**
  * Worker da Maison Aurore. Serve o site (assets estáticos, configurados no
- * wrangler.jsonc) e a API de IA em /api/*. Nenhuma chave chega ao navegador:
- * o Workers AI é acessado pelo vínculo `AI` e o token do Hugging Face fica no Worker.
+ * wrangler.jsonc) e a API em /api/*: geração de imagens (Workers AI, pelo vínculo
+ * `AI`, sem token) e pedidos sob medida do provador 3D (guardados no KV).
+ * Nenhuma chave chega ao navegador.
  */
 export default {
   async fetch(request, env): Promise<Response> {
@@ -32,8 +33,21 @@ async function route(request: Request, env: Env, url: URL): Promise<Response> {
   if (pathname === '/api/pecas/imagem' && method === 'POST') {
     return handlePieceImage(request, env)
   }
-  if (pathname === '/api/provador' && method === 'POST') {
-    return handleTryOn(request, env)
+  if (pathname === '/api/pedidos' && method === 'POST') {
+    return handleCreateOrder(request, env)
+  }
+  if (pathname === '/api/pedidos' && method === 'GET') {
+    return handleListOrders(request, env)
+  }
+
+  const order = /^\/api\/pedidos\/([^/]+)$/.exec(pathname)
+  if (order?.[1] && method === 'DELETE') {
+    return handleDeleteOrder(request, env, order[1])
+  }
+
+  const piece = /^\/api\/pecas\/([a-f0-9]{64})$/.exec(pathname)
+  if (piece?.[1] && method === 'GET') {
+    return handleGetPiece(piece[1], env)
   }
 
   const image = /^\/api\/imagens\/([a-f0-9]{64})$/.exec(pathname)

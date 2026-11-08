@@ -4,7 +4,6 @@ import type { AiResult, FallbackReason } from '../../src/types/ai'
 export const FALLBACK_IMAGES = {
   peca: '/exemplos/peca.jpg',
   pecaMasculina: '/exemplos/peca-masculina.jpg',
-  provador: '/exemplos/provador.jpg',
 } as const
 
 /** Resposta de fallback: status 200 para a tela tratar como resultado, com o motivo. */

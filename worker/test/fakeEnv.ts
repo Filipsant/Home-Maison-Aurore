@@ -1,21 +1,39 @@
 import { vi } from 'vitest'
 
+type Stored = ArrayBuffer | string
+
 /** KV em memória com a parte da API que o Worker usa. */
 export class MemoryKV {
-  store = new Map<string, { value: ArrayBuffer; metadata: unknown }>()
+  store = new Map<string, { value: Stored; metadata: unknown; expirationTtl?: number }>()
 
   getWithMetadata(key: string) {
     const entry = this.store.get(key)
     return Promise.resolve({ value: entry?.value ?? null, metadata: entry?.metadata ?? null })
   }
 
-  put(key: string, value: ArrayBuffer, options?: { metadata?: unknown }) {
-    this.store.set(key, { value, metadata: options?.metadata })
+  get(key: string, type?: 'json' | 'text') {
+    const value = this.store.get(key)?.value
+    if (value === undefined) return Promise.resolve(null)
+    const text = typeof value === 'string' ? value : new TextDecoder().decode(value)
+    return Promise.resolve(type === 'json' ? (JSON.parse(text) as unknown) : text)
+  }
+
+  put(key: string, value: Stored, options?: { metadata?: unknown; expirationTtl?: number }) {
+    this.store.set(key, { value, metadata: options?.metadata, expirationTtl: options?.expirationTtl })
     return Promise.resolve()
   }
 
-  list({ prefix }: { prefix: string }) {
-    const keys = [...this.store.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name }))
+  delete(key: string) {
+    this.store.delete(key)
+    return Promise.resolve()
+  }
+
+  list({ prefix, limit = 1000 }: { prefix: string; limit?: number }) {
+    const keys = [...this.store.keys()]
+      .filter((k) => k.startsWith(prefix))
+      .sort()
+      .slice(0, limit)
+      .map((name) => ({ name }))
     return Promise.resolve({ keys, list_complete: true })
   }
 }
@@ -30,13 +48,11 @@ export function fakeEnv(overrides: Partial<Record<string, unknown>> = {}) {
     AI: ai,
     CACHE: kv,
     LIMITE_IMAGEM: undefined,
-    LIMITE_PROVADOR: undefined,
-    TRYON_SPACE: 'yisol/IDM-VTON',
-    TRYON_SPACE_RESERVA: 'Nymbo/Virtual-Try-On',
+    LIMITE_PEDIDO: undefined,
+    LIMITE_PAINEL: undefined,
     ALLOWED_ORIGINS: 'http://localhost:5173',
     IMAGE_TIMEOUT_MS: '200',
-    TRYON_TIMEOUT_MS: '200',
-    HF_TOKEN: '',
+    ATELIE_SENHA: '',
     ...overrides,
   }
   return { env: env as unknown as Env, kv, ai }

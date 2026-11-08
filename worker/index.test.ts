@@ -4,17 +4,11 @@ import worker from './index'
 import { resetMemoryLimits } from './lib/rateLimit'
 import { fakeEnv, postJson, validPiece } from './test/fakeEnv'
 
-vi.mock('./ai/tryOn', () => ({ runTryOn: vi.fn() }))
-const { runTryOn } = await import('./ai/tryOn')
-
 // Nos testes não há metadados `cf` do Cloudflare: o pedido comum basta.
 const call = (request: Request, env: Env) => worker.fetch(request as Parameters<typeof worker.fetch>[0], env)
 const json = (response: Response) => response.json<AiResult>()
 
-beforeEach(() => {
-  resetMemoryLimits()
-  vi.mocked(runTryOn).mockReset()
-})
+beforeEach(() => resetMemoryLimits())
 afterEach(() => vi.restoreAllMocks())
 
 describe('POST /api/pecas/imagem', () => {
@@ -24,7 +18,8 @@ describe('POST /api/pecas/imagem', () => {
     expect(first).toMatchObject({ status: 'ok', cached: false })
     expect(ai.run).toHaveBeenCalledOnce()
     expect(ai.run.mock.calls[0]).toMatchObject(['@cf/black-forest-labs/flux-1-schnell', { steps: 4 }])
-    expect(kv.store.size).toBe(1)
+    // A foto e as escolhas (para o provador 3D).
+    expect([...kv.store.keys()].map((k) => k.split(':')[0]).sort()).toEqual(['img', 'peca'])
 
     // Mesmos campos em outra ordem: mesmo resultado, vindo do cache.
     const again = await json(
@@ -132,64 +127,6 @@ describe('GET /api/imagens/:hash', () => {
   })
 })
 
-describe('POST /api/provador', () => {
-  const image = (name: string) =>
-    new File([new Uint8Array([0xff, 0xd8, name.length])], name, { type: 'image/jpeg' })
-  const form = (fields: Record<string, string | File>) => {
-    const data = new FormData()
-    for (const [k, v] of Object.entries(fields)) data.append(k, v)
-    return new Request('http://localhost:5173/api/provador', { method: 'POST', body: data })
-  }
-
-  it('prova a peça, guarda no cache e não chama o Space de novo para as mesmas fotos', async () => {
-    const { env } = fakeEnv()
-    vi.mocked(runTryOn).mockResolvedValue({
-      bytes: new Uint8Array([0x89, 0x50]).buffer,
-      contentType: 'image/png',
-      space: 'yisol/IDM-VTON',
-    })
-    const fields = { pessoa: image('pessoa.jpg'), peca: image('vestido.jpg'), descricao: 'ivory silk gown' }
-    expect(await json(await call(form(fields), env))).toMatchObject({ status: 'ok', cached: false })
-    expect(await json(await call(form(fields), env))).toMatchObject({ status: 'ok', cached: true })
-    expect(runTryOn).toHaveBeenCalledOnce()
-    expect(vi.mocked(runTryOn).mock.calls[0]?.[0]).toEqual(['yisol/IDM-VTON', 'Nymbo/Virtual-Try-On'])
-  })
-
-  it('aceita uma peça gerada antes (pecaId) no lugar da foto da peça', async () => {
-    const { env } = fakeEnv()
-    vi.mocked(runTryOn).mockResolvedValue({
-      bytes: new Uint8Array([1]).buffer,
-      contentType: 'image/png',
-      space: 'x',
-    })
-    const piece = await json(await call(postJson('/api/pecas/imagem', validPiece), env))
-    if (piece.status !== 'ok') throw new Error('esperava ok')
-    expect(await json(await call(form({ pessoa: image('p.jpg'), pecaId: piece.id }), env))).toMatchObject({
-      status: 'ok',
-    })
-  })
-
-  it('sem foto válida: 400 com motivo "invalido"', async () => {
-    const { env } = fakeEnv()
-    const notImage = new File(['texto'], 'nota.txt', { type: 'text/plain' })
-    const response = await call(form({ pessoa: notImage, peca: image('v.jpg') }), env)
-    expect(response.status).toBe(400)
-    expect(await json(response)).toMatchObject({ reason: 'invalido', imageUrl: '/exemplos/provador.jpg' })
-  })
-
-  it('Space fora do ar: imagem de exemplo com motivo "indisponivel"', async () => {
-    const { env } = fakeEnv()
-    vi.mocked(runTryOn).mockRejectedValue(new Error('Space pausado'))
-    vi.spyOn(console, 'error').mockImplementation(() => undefined)
-    expect(await json(await call(form({ pessoa: image('p.jpg'), peca: image('v.jpg') }), env))).toMatchObject(
-      {
-        status: 'fallback',
-        reason: 'indisponivel',
-      },
-    )
-  })
-})
-
 describe('segurança e rotas', () => {
   it('recusa chamadas de outra origem', async () => {
     const { env } = fakeEnv()
@@ -213,9 +150,16 @@ describe('segurança e rotas', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://outro.dev')
   })
 
-  it('nenhuma resposta expõe tokens', async () => {
-    const { env } = fakeEnv({ HF_TOKEN: 'hf_segredo_de_teste' })
+  it('nenhuma resposta expõe segredos', async () => {
+    const { env } = fakeEnv({ ATELIE_SENHA: 'senha_de_teste', CLOUDFLARE_API_TOKEN: 'token_de_teste' })
     const body = await (await call(new Request('http://localhost:5173/api/saude'), env)).text()
-    expect(body).not.toContain('hf_segredo_de_teste')
+    expect(body).not.toContain('senha_de_teste')
+    expect(body).not.toContain('token_de_teste')
+  })
+
+  it('a antiga rota do provador por foto não existe mais', async () => {
+    const { env } = fakeEnv()
+    const response = await call(new Request('http://localhost:5173/api/provador', { method: 'POST' }), env)
+    expect(response.status).toBe(404)
   })
 })
