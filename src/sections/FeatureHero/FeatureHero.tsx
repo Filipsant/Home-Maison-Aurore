@@ -45,7 +45,7 @@ export function FeatureHero() {
               className="mb-4 hidden h-16 w-px animate-bob bg-grafite motion-reduce:animate-none md:block"
             />
           </div>
-          <HeroMedia toile={hero.toile} finalPiece={hero.finalPiece} />
+          <HeroMedia toile={hero.toile} finalPiece={hero.finalPiece} labels={hero.videoLabels} />
         </Container>
       </div>
 

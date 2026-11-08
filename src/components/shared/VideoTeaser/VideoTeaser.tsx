@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { useReducedMotion } from '@/animations/hooks/useReducedMotion'
 import { Photo } from '@/components/shared/Photo'
+import { useVisibleAutoplay } from '@/hooks/useVisibleAutoplay'
 import { cn } from '@/lib/utils'
 import type { VideoMedia } from '@/types/content'
 
@@ -23,31 +24,12 @@ export function VideoTeaser({
 }: VideoTeaserProps) {
   const reduced = useReducedMotion()
   const videoRef = React.useRef<HTMLVideoElement>(null)
-  const [visible, setVisible] = React.useState(false)
   const [userPaused, setUserPaused] = React.useState<boolean | null>(null)
 
   // Pausado por escolha da pessoa; sem escolha, segue a preferência de movimento.
   const paused = userPaused ?? reduced
-
-  React.useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-    const io = new IntersectionObserver(([entry]) => setVisible(entry?.isIntersecting ?? false), {
-      threshold: 0.25,
-    })
-    io.observe(video)
-    return () => io.disconnect()
-  }, [])
-
-  React.useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-    if (visible && !paused) {
-      video.play().catch(() => setUserPaused(true))
-    } else {
-      video.pause()
-    }
-  }, [visible, paused])
+  const refuse = React.useCallback(() => setUserPaused(true), [])
+  useVisibleAutoplay(videoRef, videoRef, paused, refuse, 0.25)
 
   if (!media.videoSrc) {
     return <Photo media={media} className={className} {...props} />
@@ -58,14 +40,16 @@ export function VideoTeaser({
       <video
         ref={videoRef}
         className="absolute inset-0 size-full object-cover"
-        src={media.videoSrc}
         poster={media.poster}
         muted
         loop
         playsInline
         preload="metadata"
         aria-label={media.alt ?? media.caption}
-      />
+      >
+        {media.videoWebm && <source src={media.videoWebm} type="video/webm" />}
+        <source src={media.videoSrc} type="video/mp4" />
+      </video>
       <button
         type="button"
         onClick={() => setUserPaused(!paused)}

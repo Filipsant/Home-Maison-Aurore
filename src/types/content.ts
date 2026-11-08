@@ -20,8 +20,10 @@ export interface Media {
 }
 
 export interface VideoMedia extends Media {
-  /** URL do vídeo em loop (mudo). Sem ela, só o poster/placeholder aparece. */
+  /** URL do vídeo em loop (mudo), em MP4/H.264 (Safari e iPhone). Sem ela, só o poster/placeholder aparece. */
   videoSrc?: string
+  /** Mesma cena em WebM/VP9: mais leve, preferida por Chrome, Edge e Firefox. */
+  videoWebm?: string
   /** Imagem de poster do vídeo. */
   poster?: string
 }
@@ -40,10 +42,12 @@ export interface Hero {
   support: string
   paragraphs: [string, string]
   cta: Link
-  /** Peça final (revelada sobre a toile). */
-  finalPiece: Media
+  /** Peça final (revelada sobre a toile): foto ou vídeo em loop. */
+  finalPiece: VideoMedia
   /** Toile em musselina (por baixo). */
   toile: Media
+  /** Botão de pausa do vídeo do hero. */
+  videoLabels: { play: string; pause: string }
 }
 
 export interface Piece {

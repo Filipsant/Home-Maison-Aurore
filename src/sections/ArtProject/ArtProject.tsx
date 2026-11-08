@@ -29,6 +29,12 @@ export function ArtProject() {
         className="absolute inset-0 -z-10"
         style={{ aspectRatio: 'auto' }}
       />
+      {/* Véu de veludo sobre a foto: o texto claro continua legível sobre gravuras claras. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-veludo-2/55" />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-linear-to-t from-veludo-2 via-veludo-2/60 to-transparent"
+      />
       <p aria-hidden="true" className="absolute top-24 right-gutter text-caption text-texto-suave-escuro">
         {artProject.media.caption}
       </p>

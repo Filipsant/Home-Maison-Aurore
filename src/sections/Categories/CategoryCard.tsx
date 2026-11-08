@@ -44,6 +44,14 @@ export function CategoryCard({ category }: CategoryCardProps) {
           />
         ))}
       </div>
+      {/* Degradê no tom do card: o texto continua legível sobre qualquer foto. */}
+      <div
+        aria-hidden="true"
+        className={cn(
+          'pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t to-transparent',
+          surface === 'dark' ? 'from-veludo/90 via-veludo/60' : 'from-nevoa/95 via-nevoa/70',
+        )}
+      />
       <div className="absolute inset-x-6 bottom-6 flex flex-col gap-2">
         <h3 className={categoryNameVariants({ surface })}>{category.name}</h3>
         <p className={categoryTextVariants({ surface })}>{category.description}</p>
