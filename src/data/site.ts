@@ -17,7 +17,7 @@ export const site: Site = {
     title: 'Ateliê digital',
     links: [
       { id: 'criar-peca', label: 'Criar peça', href: '/atelie-digital' },
-      { id: 'provador', label: 'Provador virtual', href: '/provador' },
+      { id: 'provador', label: 'Provador 3D', href: '/provador' },
     ],
   },
   footer: {
@@ -50,7 +50,7 @@ export const site: Site = {
           { label: 'O ateliê', href: '/#atelie' },
           { label: 'Editorial', href: '/#editorial' },
           { label: 'Criar peça', href: '/atelie-digital' },
-          { label: 'Provador virtual', href: '/provador' },
+          { label: 'Provador 3D', href: '/provador' },
         ],
       },
       {

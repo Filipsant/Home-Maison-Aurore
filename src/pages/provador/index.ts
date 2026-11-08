@@ -1,1 +1,1 @@
-export { TryOnPage } from './TryOnPage'
+export { ProvadorPage } from './ProvadorPage'

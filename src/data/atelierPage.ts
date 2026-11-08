@@ -14,7 +14,7 @@ export const atelierPage = {
   },
   submit: 'Criar peça',
   again: 'Gerar outra versão',
-  tryOn: 'Provar esta peça',
+  tryOn: 'Ver em 3D e tirar medidas',
   retry: 'Tentar de novo',
   empty: 'Sua peça aparece aqui.',
   resultAlt: 'Fotografia gerada por IA',

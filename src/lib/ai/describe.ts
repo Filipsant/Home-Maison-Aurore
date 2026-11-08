@@ -1,28 +1,34 @@
 import { atelierOptions } from '@/data/atelierOptions'
+import { atelierPage } from '@/data/atelierPage'
 import type { PieceRequest } from '@/types/ai'
 import type { AtelierOption } from '@/types/content'
 
-const promptOf = (list: AtelierOption[], id: string) => list.find((o) => o.id === id)?.prompt ?? ''
-
-/**
- * Descrição curta da peça em inglês, para o provador (o modelo entende melhor inglês).
- * Ex.: "ivory haute couture evening gown in layered silk organza".
- */
-export function describePiece(piece: PieceRequest): string {
-  const color = promptOf(atelierOptions.cor, piece.cor)
-  const garment = promptOf(atelierOptions.peca, piece.peca)
-  const fabric = promptOf(atelierOptions.tecido, piece.tecido)
-  return `${color} ${garment} in ${fabric}`.replace(/\s+/g, ' ').trim().slice(0, 120)
-}
+const labelOf = (list: AtelierOption[], id: string) => list.find((o) => o.id === id)?.label ?? id
 
 /** Texto alternativo da imagem gerada, em português, a partir das escolhas. */
 export function altForPiece(piece: PieceRequest): string {
-  const label = (list: AtelierOption[], id: string) => list.find((o) => o.id === id)?.label ?? ''
   const parts = [
-    label(atelierOptions.peca, piece.peca),
-    `em ${label(atelierOptions.tecido, piece.tecido).toLowerCase()}`,
-    label(atelierOptions.cor, piece.cor).toLowerCase(),
-    `silhueta ${label(atelierOptions.silhueta, piece.silhueta).toLowerCase()}`,
+    labelOf(atelierOptions.peca, piece.peca),
+    `em ${labelOf(atelierOptions.tecido, piece.tecido).toLowerCase()}`,
+    labelOf(atelierOptions.cor, piece.cor).toLowerCase(),
+    `silhueta ${labelOf(atelierOptions.silhueta, piece.silhueta).toLowerCase()}`,
   ]
   return parts.join(', ')
+}
+
+/** Ficha da peça (rótulo e valor de cada campo), para o provador e o painel do ateliê. */
+export function pieceSummary(piece: PieceRequest): { label: string; value: string }[] {
+  const { fields } = atelierPage
+  return [
+    { label: fields.linha, value: labelOf(atelierOptions.linha, piece.linha) },
+    { label: fields.peca, value: labelOf(atelierOptions.peca, piece.peca) },
+    { label: fields.tecido, value: labelOf(atelierOptions.tecido, piece.tecido) },
+    { label: fields.cor, value: labelOf(atelierOptions.cor, piece.cor) },
+    { label: fields.silhueta, value: labelOf(atelierOptions.silhueta, piece.silhueta) },
+    {
+      label: fields.detalhes.replace(/\s*\(.*\)$/, ''),
+      value: piece.detalhes.map((id) => labelOf(atelierOptions.detalhes, id)).join(', ') || '—',
+    },
+    { label: fields.colecao, value: labelOf(atelierOptions.colecao, piece.colecao) },
+  ]
 }

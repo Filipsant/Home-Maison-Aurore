@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { tryOnLoadingMessage } from '@/data/aiMessages'
-import { apiUrl, generatePiece, tryOn } from './client'
+import { fetchPiece, listOrders, sendOrder } from '@/lib/api/orders'
+import { apiUrl, generatePiece } from './client'
 
 const piece = {
   linha: 'feminina',
@@ -43,13 +43,13 @@ describe('cliente da API de IA', () => {
     })
   })
 
-  it('resposta que não é JSON (Worker parado) também vira exemplo', async () => {
+  it('resposta que não é JSON (Worker parado) também vira exemplo, da mesma linha', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(() => Promise.resolve(new Response('<html>', { status: 502 }))),
     )
-    const result = await tryOn({ person: new Blob(['x']), garment: new Blob(['y']) })
-    expect(result).toMatchObject({ status: 'fallback', imageUrl: '/exemplos/provador.jpg' })
+    const result = await generatePiece({ ...piece, linha: 'masculina', peca: 'terno' })
+    expect(result).toMatchObject({ status: 'fallback', imageUrl: '/exemplos/peca-masculina.jpg' })
   })
 
   it('cancelamento continua sendo cancelamento (não vira exemplo)', async () => {
@@ -64,30 +64,54 @@ describe('cliente da API de IA', () => {
     await expect(generatePiece(piece, controller.signal)).rejects.toThrow('aborted')
   })
 
-  it('o provador envia a peça gerada pelo id, sem reenviar a foto', async () => {
-    const fetchMock = vi.fn((_url: string, init?: RequestInit) => {
-      const body = init?.body as FormData
-      expect(body.get('pecaId')).toBe('a'.repeat(64))
-      expect(body.get('peca')).toBeNull()
-      return Promise.resolve(
-        Response.json({ status: 'ok', id: 'b', imageUrl: '/api/imagens/b', cached: false }),
-      )
-    })
-    vi.stubGlobal('fetch', fetchMock)
-    await tryOn({ person: new Blob(['x']), pieceId: 'a'.repeat(64) })
-    expect(fetchMock).toHaveBeenCalledOnce()
-  })
-
   it('apiUrl só prefixa os caminhos da API', () => {
     expect(apiUrl('/api/imagens/abc')).toBe('/api/imagens/abc')
     expect(apiUrl('/exemplos/peca.jpg')).toBe('/exemplos/peca.jpg')
   })
 })
 
-describe('mensagens de espera do provador', () => {
-  it('avisam sobre a fila conforme o tempo passa', () => {
-    expect(tryOnLoadingMessage(0)).toContain('Enviando')
-    expect(tryOnLoadingMessage(10)).toContain('2 minutos')
-    expect(tryOnLoadingMessage(60)).toContain('Ajustando')
+describe('cliente de peças e pedidos', () => {
+  it('peça inexistente vira "nao-encontrada"; rede fora do ar vira "erro"', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(Response.json({ erro: 'x' }, { status: 404 }))),
+    )
+    expect(await fetchPiece('a'.repeat(64))).toEqual({ status: 'nao-encontrada' })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))),
+    )
+    expect(await fetchPiece('a'.repeat(64))).toEqual({ status: 'erro' })
+  })
+
+  it('pedido sem rede vira "indisponivel", sem lançar erro', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))),
+    )
+    expect(
+      await sendOrder({
+        pecaId: 'a'.repeat(64),
+        medidas: {},
+        nome: 'Ana',
+        email: 'a@b.co',
+        telefone: '',
+        observacoes: '',
+        consentimento: true,
+      }),
+    ).toEqual({ status: 'erro', motivo: 'indisponivel' })
+  })
+
+  it('painel: manda a senha no cabeçalho e traduz os erros', async () => {
+    const fetchMock = vi.fn((_url: string, init?: RequestInit) =>
+      Promise.resolve(
+        new Headers(init?.headers).get('Authorization') === 'Bearer certa'
+          ? Response.json({ pedidos: [] })
+          : Response.json({ erro: 'x' }, { status: 401 }),
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    expect(await listOrders('certa')).toEqual({ status: 'ok', pedidos: [] })
+    expect(await listOrders('errada')).toEqual({ status: 'senha' })
   })
 })

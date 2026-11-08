@@ -33,29 +33,3 @@ export async function generatePiece(request: PieceRequest, signal?: AbortSignal)
     return { status: 'fallback', imageUrl: example, reason: 'indisponivel' }
   }
 }
-
-export interface TryOnRequest {
-  person: Blob
-  /** Foto da peça enviada pela pessoa... */
-  garment?: Blob
-  /** ...ou o id de uma peça gerada no ateliê digital. */
-  pieceId?: string
-  description?: string
-}
-
-/** Prova a peça na foto da pessoa. Nunca lança: falhas viram resultado de exemplo. */
-export async function tryOn(request: TryOnRequest, signal?: AbortSignal): Promise<AiResult> {
-  const form = new FormData()
-  form.append('pessoa', request.person, 'pessoa.jpg')
-  if (request.pieceId) form.append('pecaId', request.pieceId)
-  else if (request.garment) form.append('peca', request.garment, 'peca.jpg')
-  if (request.description) form.append('descricao', request.description)
-
-  try {
-    const response = await fetch(`${API_URL}/api/provador`, { method: 'POST', body: form, signal })
-    return await readResult(response, '/exemplos/provador.jpg')
-  } catch (error) {
-    if (signal?.aborted) throw error
-    return { status: 'fallback', imageUrl: '/exemplos/provador.jpg', reason: 'indisponivel' }
-  }
-}

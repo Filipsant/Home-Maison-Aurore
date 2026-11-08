@@ -42,7 +42,7 @@ describe('Criar peça (ateliê digital)', () => {
       colecao: 'lumiere',
       variante: 0,
     })
-    const tryOnLink = screen.getByRole('link', { name: 'Provar esta peça' })
+    const tryOnLink = screen.getByRole('link', { name: 'Ver em 3D e tirar medidas' })
     expect(tryOnLink.getAttribute('href')).toContain(`/provador?peca=${'a'.repeat(64)}`)
 
     await user.click(screen.getByRole('button', { name: 'Gerar outra versão' }))

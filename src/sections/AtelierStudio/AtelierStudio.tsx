@@ -12,7 +12,7 @@ import { atelierPage } from '@/data/atelierPage'
 import { useAiRequest } from '@/hooks/useAiRequest'
 import { fitsLinha, optionsForLinha } from '@/lib/ai/atelier'
 import { generatePiece } from '@/lib/ai/client'
-import { altForPiece, describePiece } from '@/lib/ai/describe'
+import { altForPiece } from '@/lib/ai/describe'
 import type { PieceRequest } from '@/types/ai'
 
 type SingleField = 'peca' | 'tecido' | 'cor' | 'silhueta' | 'colecao'
@@ -75,10 +75,7 @@ export function AtelierStudio() {
   }
 
   const result = state.phase === 'done' ? state.result : null
-  const tryOnHref =
-    result?.status === 'ok' && generated
-      ? `/provador?peca=${result.id}&descricao=${encodeURIComponent(describePiece(generated))}`
-      : null
+  const tryOnHref = result?.status === 'ok' && generated ? `/provador?peca=${result.id}` : null
 
   return (
     <section ref={ref} aria-labelledby="atelie-title" className="pt-header">
