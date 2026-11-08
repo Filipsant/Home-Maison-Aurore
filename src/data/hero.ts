@@ -18,12 +18,15 @@ export const hero: Hero = {
     poster: '/videos/poster-hero.webp',
     alt: 'Vídeo: mulher de trench coat bege e calça ampla caminhando sob uma colunata de pedra',
   },
+  // Camada de baixo: outra modelo caminhando ao mesmo tempo que a do Trench Lumière.
   toile: {
-    caption: 'Toile em musselina, prova 1',
+    caption: 'Manteau Écorce, peça final',
     tone: 'musselina',
     aspect: 2,
-    src: '/fotos/hero-toile.webp',
-    alt: 'Manequins de costura em musselina num ateliê',
+    videoSrc: '/videos/hero-ecorce.mp4',
+    videoWebm: '/videos/hero-ecorce.webm',
+    poster: '/videos/poster-ecorce.webp',
+    alt: 'Vídeo: mulher de óculos e casaco longo cor de oliva caminhando entre colunas brancas',
   },
-  videoLabels: { play: 'Reproduzir vídeo', pause: 'Pausar vídeo' },
+  videoLabels: { play: 'Reproduzir vídeos', pause: 'Pausar vídeos' },
 }

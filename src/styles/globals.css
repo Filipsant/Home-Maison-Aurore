@@ -229,6 +229,18 @@
 [data-hero-chalk] {
   left: var(--reveal);
 }
+/*
+ * Foto ou vídeo real acompanha a borda: o centro da peça final fica no meio de 0 → --reveal,
+ * e o da camada de baixo, no meio de --reveal → 100%. Assim a pessoa de cada lado nunca
+ * fica cortada pela linha de giz. As contas valem porque a mídia tem a largura da composição;
+ * a parte que sobra fora de cada lado continua escondida (pela máscara ou pela peça final).
+ */
+[data-hero-follow='final'] {
+  transform: translateX(calc((var(--reveal) - 100%) / 2));
+}
+[data-hero-follow='toile'] {
+  transform: translateX(calc(var(--reveal) / 2));
+}
 [data-hero-figure] {
   top: 7%;
   height: 86%;

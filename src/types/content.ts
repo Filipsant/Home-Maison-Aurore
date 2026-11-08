@@ -42,11 +42,11 @@ export interface Hero {
   support: string
   paragraphs: [string, string]
   cta: Link
-  /** Peça final (revelada sobre a toile): foto ou vídeo em loop. */
+  /** Peça final, revelada por cima: foto ou vídeo em loop. */
   finalPiece: VideoMedia
-  /** Toile em musselina (por baixo). */
-  toile: Media
-  /** Botão de pausa do vídeo do hero. */
+  /** Camada de baixo (no Figma, a toile em musselina): foto ou vídeo em loop. */
+  toile: VideoMedia
+  /** Botão que pausa os vídeos do hero. */
   videoLabels: { play: string; pause: string }
 }
 

@@ -1,10 +1,10 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, type RefObject } from 'react'
 import { useReducedMotion } from '@/animations/hooks'
 import pecaSrc from '@/assets/hero/peca.svg'
 import toileSrc from '@/assets/hero/toile.svg'
 import { useVisibleAutoplay } from '@/hooks/useVisibleAutoplay'
 import { cn } from '@/lib/utils'
-import type { Hero } from '@/types/content'
+import type { Hero, VideoMedia } from '@/types/content'
 
 interface HeroMediaProps {
   toile: Hero['toile']
@@ -14,27 +14,33 @@ interface HeroMediaProps {
 
 /**
  * Composição do Figma "Imagem hero (transição toile → peça final)":
- * a toile por baixo e a peça final revelada por cima, com a linha de giz
+ * uma camada por baixo e a peça final revelada por cima, com a linha de giz
  * marcando a borda. A largura revelada vem de `--reveal` (ver globals.css);
  * a animação a leva de 55% a 100% com o scroll.
  * As camadas `data-curtain` e `data-media` seguem o componente `Photo`,
  * para a entrada com cortina de cor (E15).
  *
- * Com `src`/`videoSrc` nos dados, mostra a foto e o vídeo reais; sem eles,
- * os desenhos do Figma. O vídeo toca mudo, em loop, só quando visível, e tem
- * botão de pausa; com movimento reduzido fica parado no poster.
+ * Com `src`/`videoSrc` nos dados, cada camada mostra a foto ou o vídeo real
+ * (hoje, duas modelos caminhando ao mesmo tempo); sem eles, os desenhos do Figma.
+ * A mídia real acompanha a borda (`data-hero-follow`), para cada pessoa ficar
+ * no meio da parte que aparece. Os vídeos tocam mudos, em loop, só quando
+ * visíveis; um botão pausa os dois, e com movimento reduzido ficam no poster.
  */
 export function HeroMedia({ toile, finalPiece, labels }: HeroMediaProps) {
   const reduced = useReducedMotion()
   const rootRef = useRef<HTMLDivElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const finalVideoRef = useRef<HTMLVideoElement>(null)
+  const toileVideoRef = useRef<HTMLVideoElement>(null)
   const [userPaused, setUserPaused] = useState<boolean | null>(null)
   // Pausado por escolha da pessoa; sem escolha, segue a preferência de movimento.
   const paused = userPaused ?? reduced
-  const hasVideo = Boolean(finalPiece.videoSrc)
+  const hasVideo = Boolean(finalPiece.videoSrc || toile.videoSrc)
+  const toileReal = Boolean(toile.src || toile.videoSrc)
+  const finalReal = Boolean(finalPiece.src || finalPiece.videoSrc)
   const refuse = useCallback(() => setUserPaused(true), [])
 
-  useVisibleAutoplay(videoRef, rootRef, paused, refuse)
+  useVisibleAutoplay(finalVideoRef, rootRef, paused, refuse)
+  useVisibleAutoplay(toileVideoRef, rootRef, paused, refuse)
 
   const label = `${finalPiece.alt ?? finalPiece.caption}. ${toile.alt ?? toile.caption}`
 
@@ -48,10 +54,10 @@ export function HeroMedia({ toile, finalPiece, labels }: HeroMediaProps) {
       <span data-curtain="" aria-hidden="true" className="absolute inset-0 bg-lilas" />
 
       <div data-media="" role="img" aria-label={label} className="absolute inset-0">
-        {/* Toile (por baixo) */}
+        {/* Camada de baixo (no Figma, a toile) */}
         <div className="absolute inset-0 bg-musselina">
-          {toile.src ? (
-            <img src={toile.src} alt="" className="absolute inset-0 size-full object-cover" />
+          {toileReal ? (
+            <LayerMedia media={toile} follow="toile" videoRef={toileVideoRef} />
           ) : (
             <div
               data-hero-figure=""
@@ -64,31 +70,17 @@ export function HeroMedia({ toile, finalPiece, labels }: HeroMediaProps) {
             aria-hidden="true"
             className={cn(
               'absolute right-4 bottom-4 w-1/3 text-right text-caption text-grafite md:w-auto',
-              toile.src && 'w-auto bg-nevoa/85 px-2 py-1',
+              toileReal && 'w-auto bg-nevoa/85 px-2 py-1',
             )}
           >
             {toile.caption}
           </p>
         </div>
 
-        {/* Peça final, revelada sobre a toile */}
+        {/* Peça final, revelada por cima */}
         <div data-hero-final="" className="absolute inset-0 bg-veludo">
-          {finalPiece.videoSrc ? (
-            <video
-              ref={videoRef}
-              poster={finalPiece.poster}
-              muted
-              loop
-              playsInline
-              preload="auto"
-              aria-hidden="true"
-              className="absolute inset-0 size-full object-cover"
-            >
-              {finalPiece.videoWebm && <source src={finalPiece.videoWebm} type="video/webm" />}
-              <source src={finalPiece.videoSrc} type="video/mp4" />
-            </video>
-          ) : finalPiece.src ? (
-            <img src={finalPiece.src} alt="" className="absolute inset-0 size-full object-cover" />
+          {finalReal ? (
+            <LayerMedia media={finalPiece} follow="final" videoRef={finalVideoRef} />
           ) : (
             <div
               data-hero-figure=""
@@ -126,5 +118,36 @@ export function HeroMedia({ toile, finalPiece, labels }: HeroMediaProps) {
         </button>
       )}
     </div>
+  )
+}
+
+interface LayerMediaProps {
+  media: VideoMedia
+  /** Qual borda a mídia acompanha (ver `[data-hero-follow]` em globals.css). */
+  follow: 'final' | 'toile'
+  videoRef: RefObject<HTMLVideoElement>
+}
+
+/** Vídeo em loop (WebM e MP4, com poster) ou foto real de uma camada do hero. */
+function LayerMedia({ media, follow, videoRef }: LayerMediaProps) {
+  const className = 'absolute inset-0 size-full object-cover'
+  if (!media.videoSrc) {
+    return <img src={media.src} alt="" data-hero-follow={follow} className={className} />
+  }
+  return (
+    <video
+      ref={videoRef}
+      poster={media.poster}
+      muted
+      loop
+      playsInline
+      preload="auto"
+      aria-hidden="true"
+      data-hero-follow={follow}
+      className={className}
+    >
+      {media.videoWebm && <source src={media.videoWebm} type="video/webm" />}
+      <source src={media.videoSrc} type="video/mp4" />
+    </video>
   )
 }

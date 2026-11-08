@@ -6,12 +6,12 @@ Linha visual: street style moderno, de "quiet luxury": casacos longos, couro e l
 
 ## Hero (Lumière)
 
-| Arquivo                                                | Conteúdo                                                  | Fonte e autor                                                                                                 |
-| ------------------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `videos/hero-lumiere.webm`, `.mp4`, `poster-hero.webp` | Mulher de trench coat bege e calça ampla sob uma colunata | [Vídeo 7681897](https://www.pexels.com/video/fashionable-model-walking-in-style-7681897/), Mikhail Nilov      |
-| `fotos/hero-toile.webp`                                | Manequins de costura em musselina num ateliê              | [Foto 32641547](https://www.pexels.com/photo/fashion-design-studio-with-dress-forms-32641547/), Rodolfo Gaion |
+| Arquivo                                                 | Conteúdo                                                    | Fonte e autor                                                                                                     |
+| ------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `videos/hero-lumiere.webm`, `.mp4`, `poster-hero.webp`  | Mulher de trench coat bege e calça ampla sob uma colunata   | [Vídeo 7681897](https://www.pexels.com/video/fashionable-model-walking-in-style-7681897/), Mikhail Nilov          |
+| `videos/hero-ecorce.webm`, `.mp4`, `poster-ecorce.webp` | Mulher de óculos e casaco longo oliva entre colunas brancas | [Vídeo 6532087](https://www.pexels.com/video/fashionable-woman-walking-towards-camera-6532087/), cottonbro studio |
 
-O vídeo usa 12 s de uma tomada contínua, em 1280×720; o último segundo se funde ao primeiro, para o loop não dar salto.
+Os dois vídeos tocam juntos, um de cada lado da linha de giz. Cada um usa uma tomada contínua (12 s no Lumière, 10 s no Écorce), em 1280×720; o último segundo se funde ao primeiro, para o loop não dar salto. O Écorce é um recorte com zoom do original em 4K, para a modelo aparecer de corpo inteiro e no mesmo tamanho da outra.
 
 ## Recém-saídas e Peças em destaque
 
