@@ -19,7 +19,7 @@ export const categories: CategoriesSection = {
       description: 'Peças únicas, feitas sob medida em provas privadas.',
       link: { label: 'Ler mais', href: '#colecao' },
       // Pexels (licença livre).
-      gallery: gallery('Alta costura', 'veludo', [
+      gallery: gallery('Alta costura', 'musselina', [
         ['alta-costura-1', 'Mulher de casaco de couro bordô numa alameda de Paris no outono'],
         ['alta-costura-2', 'Mulher de vestido de veludo bordô e óculos escuros'],
         ['alta-costura-3', 'Mulher de trench coat de couro bordô brilhante'],

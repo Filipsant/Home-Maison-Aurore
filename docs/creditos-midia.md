@@ -25,11 +25,11 @@ O vídeo usa 12 s de uma tomada contínua, em 1280×720; o último segundo se fu
 
 ## Editorial "Vestido por"
 
-| Arquivo                        | Conteúdo                                      | Fonte e autor                                                                                        |
-| ------------------------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `fotos/editorial-paris.webp`   | Casaco marrom e guarda-chuva numa rua molhada | [Foto 28773205](https://www.pexels.com/photo/28773205/), Michael Obstoj                              |
-| `fotos/editorial-bordado.webp` | Mãos bordando num bastidor                    | [Foto 39872255](https://www.pexels.com/photo/39872255/), Alexander Mass                              |
-| `fotos/editorial-linho.webp`   | Vestido de linho cinza                        | [Foto 15233095](https://www.pexels.com/photo/woman-in-gray-linen-dress-15233095/), usuário do Pexels |
+| Arquivo                        | Conteúdo                                       | Fonte e autor                                                                                        |
+| ------------------------------ | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `fotos/editorial-paris.webp`   | Casaco marrom e guarda-chuva numa rua molhada  | [Foto 28773205](https://www.pexels.com/photo/28773205/), Michael Obstoj                              |
+| `fotos/editorial-bordado.webp` | Blazer cor de conhaque alinhavado num manequim | [Foto 7778197](https://www.pexels.com/photo/7778197/), Ron Lach                                      |
+| `fotos/editorial-linho.webp`   | Vestido de linho cinza                         | [Foto 15233095](https://www.pexels.com/photo/woman-in-gray-linen-dress-15233095/), usuário do Pexels |
 
 ## Arquivo Aurore
 
