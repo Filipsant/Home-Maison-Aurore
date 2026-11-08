@@ -1,8 +1,9 @@
+import { provadorPage } from '../../src/data/provadorPage'
 import { isPieceId, validateOrder } from '../../src/lib/orders/validate'
 import type { AtelierLinha } from '../../src/types/content'
 import type { Order, OrderResult } from '../../src/types/order'
 import { checkAtelierPassword } from '../lib/auth'
-import { getPiece, keepPiece } from '../lib/cache'
+import { getPiece, getProva, keepPiece, keepProva } from '../lib/cache'
 import { jsonError } from '../lib/http'
 import { clientIp, limitByIp } from '../lib/rateLimit'
 
@@ -52,6 +53,12 @@ export async function handleCreateOrder(request: Request, env: Env, now = Date.n
   const validation = validateOrder(body, linha)
   if (!validation.ok) return result({ status: 'erro', motivo: 'invalido', erros: validation.errors }, 400)
 
+  // Provas: precisam existir e ser desta peça (elas expiram em 7 dias se não forem ao pedido).
+  const provas = await Promise.all(validation.value.provas.map((p) => getProva(env.CACHE, p)))
+  if (provas.some((p) => !p || p.pecaId !== validation.value.pecaId)) {
+    return result({ status: 'erro', motivo: 'invalido', erros: { provas: provadorPage.errors.provas } }, 400)
+  }
+
   const { id, codigo } = newOrderId(now)
   const order: Order = {
     id,
@@ -63,6 +70,7 @@ export async function handleCreateOrder(request: Request, env: Env, now = Date.n
   try {
     await env.CACHE.put(orderKey(id), JSON.stringify(order))
     await keepPiece(env.CACHE, validation.value.pecaId, piece)
+    for (const prova of provas) if (prova) await keepProva(env.CACHE, prova)
   } catch (error) {
     console.error('[pedido] falhou ao guardar:', String(error))
     return result({ status: 'erro', motivo: 'indisponivel' }, 503)

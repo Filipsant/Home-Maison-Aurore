@@ -36,7 +36,52 @@ export async function generatePieceImage(
 ): Promise<ArrayBuffer> {
   const controller = new AbortController()
   const rest = restCredentials(access)
-  const run = rest ? runViaRest(rest, prompt, controller.signal) : runViaBinding(access.AI, prompt)
+  const run = rest
+    ? runViaRest(rest, IMAGE_MODEL, {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, steps: STEPS }),
+        signal: controller.signal,
+      })
+    : runViaBinding(access.AI, prompt)
+  const image = await withTimeout(run, timeoutMs, () => controller.abort())
+  return decodeBase64(image)
+}
+
+/**
+ * Edição com imagens de referência (FLUX.2 [klein]): a prova virtual.
+ * O modelo recebe um formulário multipart: prompt, tamanho e `input_image_0..n`.
+ */
+export async function generateFittingImage(
+  access: AiAccess,
+  model: keyof AiModels & `@cf/black-forest-labs/flux-2-${string}`,
+  prompt: string,
+  images: Blob[],
+  size: { width: number; height: number },
+  timeoutMs: number,
+): Promise<ArrayBuffer> {
+  const form = new FormData()
+  form.append('prompt', prompt)
+  form.append('width', String(size.width))
+  form.append('height', String(size.height))
+  images.forEach((image, i) => form.append(`input_image_${i}`, image, `imagem-${i}.jpg`))
+
+  const controller = new AbortController()
+  const rest = restCredentials(access)
+  const run = rest
+    ? runViaRest(rest, model, { body: form, signal: controller.signal })
+    : (async () => {
+        if (!access.AI) throw new Error('Vínculo AI indisponível')
+        // O vínculo recebe o multipart como fluxo + tipo (com a fronteira do formulário).
+        const encoded = new Response(form)
+        const output = await access.AI.run(model, {
+          multipart: {
+            body: encoded.body ?? undefined,
+            contentType: encoded.headers.get('content-type') ?? '',
+          },
+        })
+        if (!output.image) throw new Error('Workers AI não devolveu imagem')
+        return output.image
+      })()
   const image = await withTimeout(run, timeoutMs, () => controller.abort())
   return decodeBase64(image)
 }
@@ -61,15 +106,15 @@ async function runViaBinding(ai: Ai | undefined, prompt: string): Promise<string
 
 async function runViaRest(
   { accountId, apiToken }: { accountId: string; apiToken: string },
-  prompt: string,
-  signal: AbortSignal,
+  model: string,
+  init: { headers?: Record<string, string>; body: BodyInit; signal: AbortSignal },
 ): Promise<string> {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/ai/run/${IMAGE_MODEL}`
+  const url = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/ai/run/${model}`
   const response = await fetch(url, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, steps: STEPS }),
-    signal,
+    headers: { Authorization: `Bearer ${apiToken}`, ...init.headers },
+    body: init.body,
+    signal: init.signal,
   })
   const data = (await response.json().catch(() => null)) as RestAnswer | null
   const image = data?.success ? data.result?.image : undefined

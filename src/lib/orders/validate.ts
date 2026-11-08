@@ -16,6 +16,7 @@ export interface ValidOrder {
   email: string
   telefone: string
   observacoes: string
+  provas: string[]
 }
 
 export type OrderValidation = { ok: true; value: ValidOrder } | { ok: false; errors: OrderErrors }
@@ -91,8 +92,14 @@ export function validateOrder(body: unknown, linha: AtelierLinha): OrderValidati
   const observacoes = multiline(b.observacoes)
   if (observacoes.length > ORDER_LIMITS.observacoes) errors.observacoes = msg.observacoes
 
+  // Provas: até uma por vista (3), cada uma um id de 64 caracteres.
+  const rawProvas: unknown = b.provas ?? []
+  const list: unknown[] | null = Array.isArray(rawProvas) ? (rawProvas as unknown[]) : null
+  if (!list || list.length > 3 || !list.every(isPieceId)) errors.provas = msg.provas
+  const provas = [...new Set((list ?? []).filter(isPieceId))]
+
   if (b.consentimento !== true) errors.consentimento = msg.consentimento
 
   if (Object.keys(errors).length) return { ok: false, errors }
-  return { ok: true, value: { pecaId, medidas, nome, email, telefone, observacoes } }
+  return { ok: true, value: { pecaId, medidas, nome, email, telefone, observacoes, provas } }
 }

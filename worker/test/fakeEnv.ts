@@ -50,8 +50,10 @@ export function fakeEnv(overrides: Partial<Record<string, unknown>> = {}) {
     LIMITE_IMAGEM: undefined,
     LIMITE_PEDIDO: undefined,
     LIMITE_PAINEL: undefined,
+    LIMITE_PROVA: undefined,
     ALLOWED_ORIGINS: 'http://localhost:5173',
     IMAGE_TIMEOUT_MS: '200',
+    PROVA_TIMEOUT_MS: '200',
     ATELIE_SENHA: '',
     ...overrides,
   }

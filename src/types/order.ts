@@ -32,6 +32,8 @@ export interface OrderRequest extends OrderContact {
   /** Medidas em cm, pelos ids de `src/data/measurements.ts` (da linha da peça). */
   medidas: Record<string, number>
   consentimento: boolean
+  /** Provas virtuais escolhidas (ids), até uma por vista. */
+  provas?: string[]
   /** Campo-isca contra robôs: fica escondido, pessoas não preenchem. */
   site?: string
 }
@@ -46,6 +48,8 @@ export interface Order extends OrderContact {
   pecaId: string
   peca: PieceRequest
   medidas: Record<string, number>
+  /** Provas virtuais que a cliente mandou junto (ids das imagens). */
+  provas: string[]
 }
 
 /** Erros de validação por campo (`medidas.<id>` para as medidas). */

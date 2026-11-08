@@ -21,17 +21,19 @@
   "kv_namespaces": [{ "binding": "CACHE", "id": "cole-aqui-o-id-do-kv" }],
 
   // Rate limit por IP (janela de 60s; aproximado por região): protege a cota gratuita
-  // de imagens, os pedidos contra spam e a senha do painel contra tentativas.
+  // de imagens e provas, os pedidos contra spam e a senha do painel contra tentativas.
   "ratelimits": [
     { "name": "LIMITE_IMAGEM", "namespace_id": "4101", "simple": { "limit": 5, "period": 60 } },
     { "name": "LIMITE_PEDIDO", "namespace_id": "4103", "simple": { "limit": 3, "period": 60 } },
     { "name": "LIMITE_PAINEL", "namespace_id": "4104", "simple": { "limit": 10, "period": 60 } },
+    { "name": "LIMITE_PROVA", "namespace_id": "4105", "simple": { "limit": 6, "period": 60 } },
   ],
 
   // Configuração não secreta (pode ser sobrescrita pelo .env em desenvolvimento).
   "vars": {
     "ALLOWED_ORIGINS": "http://localhost:5173",
     "IMAGE_TIMEOUT_MS": "20000",
+    "PROVA_TIMEOUT_MS": "45000",
   },
 
   "observability": { "enabled": true },

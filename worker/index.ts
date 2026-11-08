@@ -1,12 +1,14 @@
 import { getCachedImage, isHash } from './lib/cache'
 import { corsHeaders, isAllowedOrigin, jsonError, withHeaders } from './lib/http'
+import { handleFitting } from './routes/fitting'
 import { handleCreateOrder, handleDeleteOrder, handleListOrders } from './routes/orders'
 import { handleGetPiece, handlePieceImage } from './routes/piece'
 
 /**
  * Worker da Maison Aurore. Serve o site (assets estáticos, configurados no
  * wrangler.jsonc) e a API em /api/*: geração de imagens (Workers AI, pelo vínculo
- * `AI`, sem token) e pedidos sob medida do provador 3D (guardados no KV).
+ * `AI`, sem token), prova virtual (FLUX.2, com as fotos da cliente) e pedidos sob
+ * medida (guardados no KV).
  * Nenhuma chave chega ao navegador.
  */
 export default {
@@ -32,6 +34,9 @@ async function route(request: Request, env: Env, url: URL): Promise<Response> {
   }
   if (pathname === '/api/pecas/imagem' && method === 'POST') {
     return handlePieceImage(request, env)
+  }
+  if (pathname === '/api/provas' && method === 'POST') {
+    return handleFitting(request, env)
   }
   if (pathname === '/api/pedidos' && method === 'POST') {
     return handleCreateOrder(request, env)
