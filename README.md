@@ -67,7 +67,7 @@ Com `prefers-reduced-motion`, a página aparece no estado final: sem smooth scro
 
 ## Fotos e vídeos
 
-A home usa fotos e vídeos de acervos de uso livre (The Met e Rijksmuseum em CC0, Pexels com licença livre): o hero tem o vídeo de um vestido de gala numa rua à noite sobre a foto de manequins em musselina, e os demais cards têm peças de alta costura (House of Worth, Maison Pingat), editoriais, gravuras de moda dos anos 1930 e dois filmes de ateliê. Fontes, autores e licenças de cada arquivo estão em [`docs/creditos-midia.md`](docs/creditos-midia.md).
+A home usa fotos e vídeos do Pexels (licença livre, uso comercial sem atribuição obrigatória) numa linha visual de street style moderno: casacos longos, couro e lã, paleta chocolate, bordô, caramelo e preto. O hero tem o vídeo de uma mulher de trench coat caminhando sob uma colunata, sobre a foto de manequins em musselina. Todas as fotos passaram pelo mesmo tratamento leve de cor. Fontes, autores e licença de cada arquivo estão em [`docs/creditos-midia.md`](docs/creditos-midia.md).
 
 Os arquivos ficam em `public/fotos/` (WebP, recortados no formato de cada card) e `public/videos/` (WebM + MP4, sem áudio, com poster). Para trocar uma imagem, substitua o arquivo ou edite só o `src/data/`; os componentes não mudam.
 
@@ -78,7 +78,7 @@ media: {
   tone: 'musselina',          // cor da cortina e do fundo enquanto carrega
   aspect: 4 / 5,
   src: '/fotos/vestido-aube.webp',
-  alt: 'Vestido de baile rosa em cetim de seda, com espigas bordadas em dourado',
+  alt: 'Vestido longo de cetim marrom diante de uma balaustrada de pedra',
 },
 
 // src/data/videoFeatures.ts — vídeo (mudo, em loop, só toca na tela, com botão de pausa)

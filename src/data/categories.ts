@@ -18,12 +18,12 @@ export const categories: CategoriesSection = {
       name: 'Alta costura',
       description: 'Peças únicas, feitas sob medida em provas privadas.',
       link: { label: 'Ler mais', href: '#colecao' },
-      // The Met, Costume Institute (CC0).
+      // Pexels (licença livre).
       gallery: gallery('Alta costura', 'veludo', [
-        ['alta-costura-1', 'Vestido de baile verde-água com franjas douradas e cauda, num manequim'],
-        ['alta-costura-2', 'Vestido de baile marfim em brocado, visto de costas, com cauda longa'],
-        ['alta-costura-3', 'Casaco de noite longo com flores pretas sobre fundo branco'],
-        ['alta-costura-4', 'Capa curta roxa bordada com pérolas e franjas, sobre saia marfim'],
+        ['alta-costura-1', 'Mulher de casaco de couro bordô numa alameda de Paris no outono'],
+        ['alta-costura-2', 'Mulher de vestido de veludo bordô e óculos escuros'],
+        ['alta-costura-3', 'Mulher de trench coat de couro bordô brilhante'],
+        ['alta-costura-4', 'Mulher de casaco marrom e roupa de couro numa escadaria'],
       ]),
     },
     {
@@ -42,14 +42,14 @@ export const categories: CategoriesSection = {
     {
       id: 'acessorios',
       name: 'Acessórios',
-      description: 'Sapatos, leques e bolsas que completam a silhueta.',
+      description: 'Bolsas, sapatos e botas que completam a silhueta.',
       link: { label: 'Ler mais', href: '#colecao' },
-      // The Met (CC0).
+      // Pexels (licença livre).
       gallery: gallery('Acessórios', 'lilas', [
-        ['acessorios-1', 'Sapato de cetim marfim com laço e flores bordadas'],
-        ['acessorios-2', 'Par de escarpins de cetim bordô com laços'],
-        ['acessorios-3', 'Leque de marfim recortado, com flores pintadas no centro'],
-        ['acessorios-4', 'Bolsa de festa bordada com contas prateadas e franjas'],
+        ['acessorios-1', 'Bolsa de couro bordô e escarpim de bico fino sobre madeira'],
+        ['acessorios-2', 'Mão segurando uma bolsa de couro marrom com corrente'],
+        ['acessorios-3', 'Botas de couro marrom com fivelas'],
+        ['acessorios-4', 'Casaco escuro e bolsa de couro marrom a tiracolo'],
       ]),
     },
   ],

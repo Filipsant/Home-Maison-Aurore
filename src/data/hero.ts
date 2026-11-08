@@ -10,13 +10,13 @@ export const hero: Hero = {
   ],
   cta: { label: 'Ver a coleção', href: '#colecao' },
   finalPiece: {
-    caption: 'Vestido Lumière, peça final',
+    caption: 'Trench Lumière, peça final',
     tone: 'veludo',
     aspect: 2,
     videoSrc: '/videos/hero-lumiere.mp4',
     videoWebm: '/videos/hero-lumiere.webm',
     poster: '/videos/poster-hero.webp',
-    alt: 'Vídeo: mulher com vestido de gala bordado girando numa rua, à noite',
+    alt: 'Vídeo: mulher de trench coat bege e calça ampla caminhando sob uma colunata de pedra',
   },
   toile: {
     caption: 'Toile em musselina, prova 1',
