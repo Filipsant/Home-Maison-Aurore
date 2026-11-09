@@ -1,0 +1,1 @@
+export { FeatureHero } from './FeatureHero'

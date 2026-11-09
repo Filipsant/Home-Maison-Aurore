@@ -1,0 +1,1 @@
+export { ProvadorPage } from './ProvadorPage'

@@ -1,0 +1,20 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+        "createdAt": "2026-11-07T19:58:25.988Z",
+        "reason": "Curva medida no Floema para o afastamento com mola dos botões e pílulas (docs/motion-study.md E31/E32); estudo aprovado pelo usuário em 06/11/2026"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.12, 1.2, 0.16, 2.35)",
+        "createdAt": "2026-11-07T19:58:26.218Z",
+        "reason": "Curva medida no Floema para o ícone do botão (docs/motion-study.md E31); estudo aprovado pelo usuário em 06/11/2026"
+      }
+    ]
+  }
+}
