@@ -11,7 +11,11 @@ Linha visual: street style moderno, de "quiet luxury": casacos longos, couro e l
 | `videos/hero-lumiere.webm`, `.mp4`, `poster-hero.webp`  | Mulher de trench coat bege e calça ampla sob uma colunata   | [Vídeo 7681897](https://www.pexels.com/video/fashionable-model-walking-in-style-7681897/), Mikhail Nilov          |
 | `videos/hero-ecorce.webm`, `.mp4`, `poster-ecorce.webp` | Mulher de óculos e casaco longo oliva entre colunas brancas | [Vídeo 6532087](https://www.pexels.com/video/fashionable-woman-walking-towards-camera-6532087/), cottonbro studio |
 
-Os dois vídeos tocam juntos, um de cada lado da linha de giz. Cada um usa uma tomada contínua (12 s no Lumière, 10 s no Écorce), em 1280×720; o último segundo se funde ao primeiro, para o loop não dar salto. O Écorce é um recorte com zoom do original em 4K, para a modelo aparecer de corpo inteiro e no mesmo tamanho da outra.
+Os dois vídeos tocam juntos, um de cada lado da linha de giz, e foram montados para se completar como um díptico: as duas modelos de corpo inteiro, vindo em direção à câmera, com a cabeça na mesma altura e a mesma luz quente.
+
+- Ambos em 1920×1080, cada um com uma tomada contínua (12 s no Lumière, 6 s no Écorce). O fim de cada loop se funde ao começo (1 s no Lumière; meio segundo no Écorce, em que a modelo muda de tamanho), para não dar salto.
+- O Lumière vem do original em 1080p. A câmera recua junto com a modelo, que fica sempre do mesmo tamanho.
+- No Écorce a câmera é fixa e a modelo cresce conforme se aproxima. O vídeo é um recorte do original em 4K que muda quadro a quadro (filtro `perspective` do ffmpeg, com precisão de subpixel): a cabeça fica a 9% do topo e a base do quadro, no chão. As cores foram aquecidas para as colunas brancas ficarem cor de creme, como a pedra do Lumière.
 
 ## Recém-saídas e Peças em destaque
 
